@@ -1,15 +1,16 @@
 package ru.kkey;
 
-import java.awt.*;
+import javax.swing.*;
 
 /**
- * Hello world!
+ * Entry point
  *
+ * @author anstarovoyt
  */
 public class App 
 {
     public static void main( String[] args )
     {
-		EventQueue.invokeLater(new SwingApp());
+		SwingUtilities.invokeLater(new SwingApp());
     }
 }
