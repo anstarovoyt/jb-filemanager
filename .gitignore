@@ -4,3 +4,23 @@
 *.jar
 *.war
 *.ear
+
+# Eclipse
+.project
+.metadata
+bin/**
+tmp/**
+tmp/**/*
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+*.classpath
+.settings
+.loadpath
+.externalToolBuilders
+*/bin/*
+# Idea
+.idea
+*.iml
