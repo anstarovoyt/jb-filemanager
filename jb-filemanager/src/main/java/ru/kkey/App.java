@@ -1,5 +1,7 @@
 package ru.kkey;
 
+import java.awt.*;
+
 /**
  * Hello world!
  *
@@ -8,6 +10,6 @@ public class App
 {
     public static void main( String[] args )
     {
-        System.out.println( "Hello World!" );
+		EventQueue.invokeLater(new SwingApp());
     }
 }
