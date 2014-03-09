@@ -13,16 +13,18 @@ import java.util.Collection;
  */
 public class TextPreview implements Preview
 {
+	public static final Collection<String> extensions = Arrays.asList("txt", "log", "java");
+
 	@Override
-	public Collection<String> getExtentions()
+	public Collection<String> getExtensions()
 	{
-		return Arrays.asList("txt");
+		return extensions;
 	}
 
 	@Override
 	public void render(JDialog dialog, InputStream fileStream)
 	{
-		JTextArea textArea = new JTextArea(30, 40);
+		JTextArea textArea = new JTextArea();
 		textArea.setWrapStyleWord(true);
 		textArea.setLineWrap(true);
 		textArea.setEditable(false);
@@ -32,7 +34,7 @@ public class TextPreview implements Preview
 		dialog.add(scrollPane);
 	}
 
-	public static String readInputStreamAsString(InputStream in)
+	private String readInputStreamAsString(InputStream in)
 	{
 		try
 		{
@@ -46,7 +48,8 @@ public class TextPreview implements Preview
 				result = bis.read();
 			}
 
-			return buf.toString();
+			//TODO define charset
+			return buf.toString("UTF-8");
 		} catch (IOException e)
 		{
 			throw new RuntimeException(e);

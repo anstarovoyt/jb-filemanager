@@ -62,6 +62,7 @@ public class FilesController
 		model.addColumn("Files");
 		table.setFont(new Font(table.getFont().getFontName(), 0, 15));
 		table.setRowHeight(30);
+		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	}
 
 	private void fillDefaultValues()
@@ -107,15 +108,18 @@ public class FilesController
 	{
 		InputStream fileStream = fileSource.getFileStream(item);
 
-		String fileExtention = getFileExtention(item.getName());
+		String fileExtension = getFileExtension(item.getName());
 
 		for (Preview preview : previews)
 		{
-			if (preview.getExtentions().contains(fileExtention))
+			if (preview.getExtensions().contains(fileExtension))
 			{
 				JDialog dialog = new JDialog(mainFrame, true);
 				dialog.setSize(new Dimension(800, 600));
 				dialog.setLocationRelativeTo(null);
+
+				//destroy because it is too hard clean form
+				//inner state of the dialog can be vastly changed
 				dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 				preview.render(dialog, fileStream);
 				dialog.setVisible(true);
@@ -154,7 +158,7 @@ public class FilesController
 		}
 	}
 
-	private String getFileExtention(String name)
+	private String getFileExtension(String name)
 	{
 		return name.lastIndexOf('.') >= 0 ? name.substring(name.lastIndexOf('.') + 1) : "";
 	}

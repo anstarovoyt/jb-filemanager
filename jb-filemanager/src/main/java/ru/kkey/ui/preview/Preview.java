@@ -9,7 +9,7 @@ import java.util.Collection;
  */
 public interface Preview
 {
-	Collection<String> getExtentions();
+	Collection<String> getExtensions();
 
 	void render(JDialog dialog, InputStream fileStream);
 }
