@@ -33,7 +33,13 @@ public class SwingApp implements Runnable
 
 	private JComponent createTable()
 	{
-		DefaultTableModel dm = new DefaultTableModel();
+		DefaultTableModel dm = new DefaultTableModel()
+		{
+			public boolean isCellEditable(int row, int column)
+			{
+				return false;
+			}
+		};
 		JTable table = new JTable(dm);
 		table.setGridColor(new Color(0, 0, 0));
 		table.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0)));

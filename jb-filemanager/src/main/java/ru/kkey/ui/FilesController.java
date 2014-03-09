@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class FilesController
 {
-	private static final String ENTER = "Solve";
+	private static final String ENTER = "enter";
 
 
 	private FileSource fileSource = new FileSourceStub();
@@ -33,11 +33,8 @@ public class FilesController
 	private void fillDefaultValues()
 	{
 		model.addColumn("Files");
-		List<FileItem> files = fileSource.getFiles();
-		for (int i = 0; i < files.size(); i++)
-		{
-			model.insertRow(i, new Object[]{files.get(i)});
-		}
+		model.getDataVector().clear();
+		setFileFromSource();
 	}
 
 	private void bindEnterKey()
@@ -48,13 +45,40 @@ public class FilesController
 
 	}
 
+	private void onEnter()
+	{
+		if (table.getSelectedRow() < 0)
+		{
+			return;
+		}
+		 FileItem item = fileSource.getFiles().get(table.getSelectedRow());
+
+		if (item.isFolder())
+		{
+			table.clearSelection();
+			fileSource.goInto(item);
+			setFileFromSource();
+			model.fireTableDataChanged();
+		}
+	}
+
+	private void setFileFromSource()
+	{
+		model.getDataVector().clear();
+		List<FileItem> files = fileSource.getFiles();
+		for (int i = 0; i < files.size(); i++)
+		{
+			model.insertRow(i, new Object[]{files.get(i)});
+		}
+	}
+
 	private class EnterAction extends AbstractAction
 	{
 
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			System.out.println(table.getSelectedRow());
+			onEnter();
 		}
 	}
 }
