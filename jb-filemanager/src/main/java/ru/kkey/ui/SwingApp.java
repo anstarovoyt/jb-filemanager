@@ -1,18 +1,20 @@
-package ru.kkey;
+package ru.kkey.ui;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
 /**
- * Swing main frame
+ * Swing the main frame
  *
  * @author anstarovoyt
  */
-public class SwingApp implements Runnable {
+public class SwingApp implements Runnable
+{
 
 	@Override
-	public void run() {
+	public void run()
+	{
 		JFrame frame = new JFrame();
 
 		frame.add(createScrollablePanel());
@@ -32,15 +34,10 @@ public class SwingApp implements Runnable {
 	private JComponent createTable()
 	{
 		DefaultTableModel dm = new DefaultTableModel();
-		dm.addColumn("Files");
-		for (int i=0; i<30;i++)
-		{
-			dm.insertRow(i, new Object[] {"Row " + i} );
-		}
 		JTable table = new JTable(dm);
 		table.setGridColor(new Color(0, 0, 0));
-		table.setBorder(BorderFactory.createLineBorder(new Color(0,0,0)));
-		table.removeEditor();
+		table.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0)));
+		new FilesController(table, dm);
 		return table;
 	}
 }

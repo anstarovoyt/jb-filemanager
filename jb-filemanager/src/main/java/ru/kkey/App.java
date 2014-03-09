@@ -1,5 +1,7 @@
 package ru.kkey;
 
+import ru.kkey.ui.SwingApp;
+
 import javax.swing.*;
 
 /**
