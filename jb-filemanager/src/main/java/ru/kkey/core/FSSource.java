@@ -9,14 +9,13 @@ import java.nio.file.Paths;
 import java.util.*;
 
 /**
- * Handler for file system navigation
+ * Data source for file system navigation
  *
  * @author anstarovoyt
  */
 public class FSSource implements FileSource
 {
-	private Path currentPath;
-
+	private volatile Path currentPath;
 
 	public FSSource(String defaultPath)
 	{
@@ -27,7 +26,7 @@ public class FSSource implements FileSource
 	public List<FileItem> getFiles()
 	{
 		Map<FileItem, Path> fileItemFileMap = geFileMap();
-		ArrayList<FileItem> list = new ArrayList<FileItem>(fileItemFileMap.keySet());
+		ArrayList<FileItem> list = new ArrayList<>(fileItemFileMap.keySet());
 		Collections.sort(list);
 		return list;
 	}
@@ -46,7 +45,15 @@ public class FSSource implements FileSource
 	@Override
 	public InputStream getFileStream(FileItem item)
 	{
-		return null;
+		try
+		{
+
+			return Files.newInputStream(geFileMap().get(item));
+
+		} catch (IOException e)
+		{
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
@@ -68,9 +75,9 @@ public class FSSource implements FileSource
 
 		try
 		{
-			List<Path> files = new ArrayList<Path>();
+			List<Path> files = new ArrayList<>();
 
-			//file.listFiles returns incorrect encoding for cyrillic
+			//file.listFiles returns incorrect name
 			DirectoryStream<Path> paths = Files.newDirectoryStream(currentPath);
 
 			for (Path path : paths)
@@ -79,7 +86,7 @@ public class FSSource implements FileSource
 			}
 
 
-			Map<FileItem, Path> result = new HashMap<FileItem, Path>();
+			Map<FileItem, Path> result = new HashMap<>();
 
 			for (Path file : files)
 			{

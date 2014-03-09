@@ -12,15 +12,17 @@ import java.awt.*;
 public class SwingApp implements Runnable
 {
 
+	JFrame frame;
+
 	@Override
 	public void run()
 	{
-		JFrame frame = new JFrame();
+		frame = new JFrame();
 
 		frame.add(createScrollablePanel());
 
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		frame.setSize(new Dimension(800, 600));
+		frame.setSize(new Dimension(700, 500));
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 	}
@@ -43,7 +45,7 @@ public class SwingApp implements Runnable
 		JTable table = new JTable(dm);
 		table.setGridColor(new Color(0, 0, 0));
 		table.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0)));
-		new FilesController(table, dm);
+		new FilesController(table, dm, frame);
 		return table;
 	}
 }

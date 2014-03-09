@@ -3,6 +3,8 @@ package ru.kkey.ui;
 import ru.kkey.core.FSSource;
 import ru.kkey.core.FileItem;
 import ru.kkey.core.FileSource;
+import ru.kkey.ui.preview.Preview;
+import ru.kkey.ui.preview.TextPreview;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -11,6 +13,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -21,14 +25,18 @@ public class FilesController
 	private static final String ENTER = "enter";
 	private static final String BACK_STRING = "/...";
 
+	public static final List<Preview> previews = Arrays.<Preview>asList(new TextPreview());
+
 	private volatile FileSource fileSource = new FSSource("");
 	private final JTable table;
 	private final DefaultTableModel model;
+	private final JFrame mainFrame;
 
-	public FilesController(JTable table, DefaultTableModel model)
+	public FilesController(JTable table, DefaultTableModel model, JFrame mainFrame)
 	{
 		this.table = table;
 		this.model = model;
+		this.mainFrame = mainFrame;
 		bindEnterKey();
 		bindDoubleClick();
 		setRowStyle();
@@ -89,6 +97,29 @@ public class FilesController
 		{
 			fileSource.goInto(item);
 			updateTable();
+		} else
+		{
+			tryShowPreview(item);
+		}
+	}
+
+	void tryShowPreview(FileItem item)
+	{
+		InputStream fileStream = fileSource.getFileStream(item);
+
+		String fileExtention = getFileExtention(item.getName());
+
+		for (Preview preview : previews)
+		{
+			if (preview.getExtentions().contains(fileExtention))
+			{
+				JDialog dialog = new JDialog(mainFrame, true);
+				dialog.setSize(new Dimension(800, 600));
+				dialog.setLocationRelativeTo(null);
+				dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+				preview.render(dialog, fileStream);
+				dialog.setVisible(true);
+			}
 		}
 	}
 
@@ -121,5 +152,10 @@ public class FilesController
 		{
 			onEnter();
 		}
+	}
+
+	private String getFileExtention(String name)
+	{
+		return name.lastIndexOf('.') >= 0 ? name.substring(name.lastIndexOf('.') + 1) : "";
 	}
 }
