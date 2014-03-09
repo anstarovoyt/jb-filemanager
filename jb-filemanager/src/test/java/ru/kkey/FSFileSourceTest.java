@@ -12,10 +12,12 @@ import static org.junit.Assert.assertTrue;
  */
 public class FSFileSourceTest
 {
+	public static final String SRC_TEST_STRUCTURE_TXT = TestFSBuilder.COMMON_PATH + "/struct.txt";
+
 	@BeforeClass
 	public static void before() throws IOException
 	{
-		TestFSBuilder.build();
+		TestFSBuilder.build(SRC_TEST_STRUCTURE_TXT);
 	}
 
 	@Test

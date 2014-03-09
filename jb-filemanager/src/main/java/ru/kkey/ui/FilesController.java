@@ -1,13 +1,16 @@
 package ru.kkey.ui;
 
+import ru.kkey.core.FSSource;
 import ru.kkey.core.FileItem;
 import ru.kkey.core.FileSource;
-import ru.kkey.core.FileSourceStub;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
 
 /**
@@ -16,25 +19,46 @@ import java.util.List;
 public class FilesController
 {
 	private static final String ENTER = "enter";
+	private static final String BACK_STRING = "/...";
 
-
-	private FileSource fileSource = new FileSourceStub();
-	private JTable table;
-	private DefaultTableModel model;
+	private volatile FileSource fileSource = new FSSource("");
+	private final JTable table;
+	private final DefaultTableModel model;
 
 	public FilesController(JTable table, DefaultTableModel model)
 	{
 		this.table = table;
 		this.model = model;
 		bindEnterKey();
+		bindDoubleClick();
+		setRowStyle();
 		fillDefaultValues();
+	}
+
+	private void bindDoubleClick()
+	{
+		table.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent e)
+			{
+				if (e.getClickCount() == 2)
+				{
+					onEnter();
+				}
+			}
+		});
+	}
+
+	private void setRowStyle()
+	{
+		model.addColumn("Files");
+		table.setFont(new Font(table.getFont().getFontName(), 0, 15));
+		table.setRowHeight(30);
 	}
 
 	private void fillDefaultValues()
 	{
-		model.addColumn("Files");
-		model.getDataVector().clear();
-		updateFilesFromSource();
+		updateTable();
 	}
 
 	private void bindEnterKey()
@@ -51,24 +75,41 @@ public class FilesController
 		{
 			return;
 		}
-		FileItem item = fileSource.getFiles().get(table.getSelectedRow());
+
+		if (table.getSelectedRow() == 0)
+		{
+			fileSource.goBack();
+			updateTable();
+			return;
+		}
+
+		FileItem item = fileSource.getFiles().get(table.getSelectedRow() - 1);
 
 		if (item.isFolder())
 		{
-			table.clearSelection();
 			fileSource.goInto(item);
-			updateFilesFromSource();
-			model.fireTableDataChanged();
+			updateTable();
 		}
+	}
+
+	private void updateTable()
+	{
+		table.clearSelection();
+		updateFilesFromSource();
+		model.fireTableDataChanged();
+		table.addRowSelectionInterval(0, 0);
 	}
 
 	private void updateFilesFromSource()
 	{
 		model.getDataVector().clear();
 		List<FileItem> files = fileSource.getFiles();
-		for (int i = 0; i < files.size(); i++)
+
+		model.insertRow(0, new Object[]{BACK_STRING});
+
+		for (FileItem item : files)
 		{
-			model.insertRow(i, new Object[]{files.get(i)});
+			model.addRow(new Object[]{item});
 		}
 	}
 

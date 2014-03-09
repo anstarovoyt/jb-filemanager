@@ -16,16 +16,15 @@ import java.util.List;
 public class TestFSBuilder
 {
 	public static final String COMMON_PATH = "src/test";
-	public static final String SRC_TEST_STRUCTURE_TXT = COMMON_PATH + "/struct.txt";
-	public static final String DIR_FOR_TEST_TREE = COMMON_PATH + "tree";
+	public static final String DIR_FOR_TEST_TREE = COMMON_PATH + "/testtree";
 
-	public static void build() throws IOException
+	public static void build(String fileTreeSource) throws IOException
 	{
-		List<String> strings = Files.readAllLines(Paths.get(SRC_TEST_STRUCTURE_TXT), Charset.defaultCharset());
+		List<String> strings = Files.readAllLines(Paths.get(fileTreeSource), Charset.defaultCharset());
 
 		if (Files.exists(Paths.get(DIR_FOR_TEST_TREE)))
 		{
-			//external lib because it is very boring impl the method
+			//external lib because it is very boring impl recursive deletion
 			FileUtils.deleteDirectory(new File(DIR_FOR_TEST_TREE));
 		}
 
@@ -38,7 +37,7 @@ public class TestFSBuilder
 
 			path = path.subList(0, count);
 
-			String currentPath = DIR_FOR_TEST_TREE + "/" + concat(path) + "/" + currentValue.trim();
+			String currentPath = DIR_FOR_TEST_TREE + "/" + join(path) + "/" + currentValue.trim();
 			if (isDir(currentValue))
 			{
 				Files.createDirectory(Paths.get(currentPath));
@@ -53,11 +52,11 @@ public class TestFSBuilder
 	private static int countWhiteSpaces(String str)
 	{
 		int i = -1;
-		while (str.length() > ++i && Character.isWhitespace(str.charAt(i))) {};
+		while (str.length() > ++i && Character.isWhitespace(str.charAt(i))) ;
 		return i;
 	}
 
-	private static String concat(List<String> str)
+	private static String join(List<String> str)
 	{
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < str.size(); i++)

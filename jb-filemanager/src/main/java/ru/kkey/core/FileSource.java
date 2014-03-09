@@ -12,7 +12,7 @@ public interface FileSource
 
 	void goInto(FileItem item);
 
-	InputStream getStream(FileItem item);
+	InputStream getFileStream(FileItem item);
 
 	void goBack();
 }
