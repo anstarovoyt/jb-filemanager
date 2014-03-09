@@ -34,7 +34,7 @@ public class FilesController
 	{
 		model.addColumn("Files");
 		model.getDataVector().clear();
-		setFileFromSource();
+		updateFilesFromSource();
 	}
 
 	private void bindEnterKey()
@@ -51,18 +51,18 @@ public class FilesController
 		{
 			return;
 		}
-		 FileItem item = fileSource.getFiles().get(table.getSelectedRow());
+		FileItem item = fileSource.getFiles().get(table.getSelectedRow());
 
 		if (item.isFolder())
 		{
 			table.clearSelection();
 			fileSource.goInto(item);
-			setFileFromSource();
+			updateFilesFromSource();
 			model.fireTableDataChanged();
 		}
 	}
 
-	private void setFileFromSource()
+	private void updateFilesFromSource()
 	{
 		model.getDataVector().clear();
 		List<FileItem> files = fileSource.getFiles();

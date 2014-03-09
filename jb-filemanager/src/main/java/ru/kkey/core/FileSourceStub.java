@@ -15,13 +15,13 @@ public class FileSourceStub implements FileSource
 	public List<FileItem> getFiles()
 	{
 		List<FileItem> result = new ArrayList<FileItem>();
-		result.add(new FileItem("dir " + dirIndex + "1", true));
-		result.add(new FileItem("dir " + dirIndex + "2", true));
-		result.add(new FileItem("dir " + dirIndex + "3", true));
-		result.add(new FileItem("dir " + dirIndex + "4", true));
-		result.add(new FileItem("file " + dirIndex + "1", false));
-		result.add(new FileItem("file " + dirIndex + "2", false));
-		result.add(new FileItem("file " + dirIndex + "3", false));
+		result.add(new FileItem("dir " + dirIndex + "1", 1, true));
+		result.add(new FileItem("dir " + dirIndex + "2", 2, true));
+		result.add(new FileItem("dir " + dirIndex + "3", 3, true));
+		result.add(new FileItem("dir " + dirIndex + "4", 4, true));
+		result.add(new FileItem("file " + dirIndex + "1", 5, false));
+		result.add(new FileItem("file " + dirIndex + "2", 6, false));
+		result.add(new FileItem("file " + dirIndex + "3", 7, false));
 		return result;
 	}
 
