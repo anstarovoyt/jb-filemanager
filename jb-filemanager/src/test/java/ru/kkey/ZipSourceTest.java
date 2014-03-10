@@ -1,6 +1,6 @@
 package ru.kkey;
 
-import ru.kkey.core.FileSource;
+import ru.kkey.core.Source;
 import ru.kkey.core.ZipSource;
 
 /**
@@ -9,7 +9,7 @@ import ru.kkey.core.ZipSource;
 public class ZipSourceTest extends FileSourceTestBase
 {
 	@Override
-	protected FileSource createSource()
+	protected Source createSource()
 	{
 		return new ZipSource(TestZipBuilder.ZIP_NAME);
 	}

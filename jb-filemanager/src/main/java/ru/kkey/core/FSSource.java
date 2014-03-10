@@ -13,7 +13,7 @@ import java.util.*;
  *
  * @author anstarovoyt
  */
-public class FSSource implements FileSource
+public class FSSource implements Source
 {
 	volatile Path currentPath;
 
@@ -28,7 +28,7 @@ public class FSSource implements FileSource
 	}
 
 	@Override
-	public List<FileItem> getFiles()
+	public List<FileItem> listFiles()
 	{
 		Map<FileItem, Path> fileItemFileMap = geFileMap();
 		ArrayList<FileItem> list = new ArrayList<>(fileItemFileMap.keySet());

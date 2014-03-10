@@ -1,7 +1,7 @@
 package ru.kkey;
 
 import ru.kkey.core.FSSource;
-import ru.kkey.core.FileSource;
+import ru.kkey.core.Source;
 
 /**
  * @author anstarovoyt
@@ -9,7 +9,7 @@ import ru.kkey.core.FileSource;
 public class FSSourceTest extends FileSourceTestBase
 {
 	@Override
-	protected FileSource createSource()
+	protected Source createSource()
 	{
 		return new FSSource(TestFSBuilder.DIR_FOR_TEST_TREE);
 	}

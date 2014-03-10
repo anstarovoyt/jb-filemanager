@@ -6,9 +6,9 @@ import java.util.List;
 /**
  * @author anstarovoyt
  */
-public interface FileSource
+public interface Source
 {
-	List<FileItem> getFiles();
+	List<FileItem> listFiles();
 
 	void goInto(FileItem item);
 

@@ -9,11 +9,13 @@ import org.apache.ftpserver.usermanager.impl.BaseUser;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import ru.kkey.core.FTPSource;
-import ru.kkey.core.FileSource;
+import ru.kkey.core.Source;
 
 import java.nio.file.Paths;
 
 /**
+ * Testing {@link FTPSource}
+ *
  * @author anstarovoyt
  */
 public class FTPSourceTest extends FileSourceTestBase
@@ -53,7 +55,7 @@ public class FTPSourceTest extends FileSourceTestBase
 	}
 
 	@Override
-	protected FileSource createSource()
+	protected Source createSource()
 	{
 		return new FTPSource("localhost", 2221, "anonymous", "");
 	}

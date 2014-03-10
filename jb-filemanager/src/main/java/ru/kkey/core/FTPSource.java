@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * @author anstarovoyt
  */
-public class FTPSource implements FileSource
+public class FTPSource implements Source
 {
 	private final FTPClient client;
 
@@ -31,7 +31,7 @@ public class FTPSource implements FileSource
 
 
 	@Override
-	public List<FileItem> getFiles()
+	public List<FileItem> listFiles()
 	{
 		List<FileItem> result = new ArrayList<>();
 		try
@@ -97,7 +97,6 @@ public class FTPSource implements FileSource
 	@Override
 	public void destroy()
 	{
-
 		try
 		{
 			client.disconnect();

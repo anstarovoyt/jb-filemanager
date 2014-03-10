@@ -2,7 +2,7 @@ package ru.kkey.ui;
 
 import ru.kkey.core.FSSource;
 import ru.kkey.core.FileItem;
-import ru.kkey.core.FileSource;
+import ru.kkey.core.Source;
 import ru.kkey.core.ZipSource;
 import ru.kkey.ui.preview.Preview;
 import ru.kkey.ui.preview.PreviewRegistry;
@@ -26,9 +26,9 @@ public class FilesController
 	private static final String ENTER = "enter";
 	private static final String BACK_STRING = "/...";
 
-	private volatile FileSource fileSource = new FSSource("");
+	private volatile Source fileSource = new FSSource("");
 
-	private CopyOnWriteArrayList<FileSource> stack = new CopyOnWriteArrayList<>();
+	private CopyOnWriteArrayList<Source> stack = new CopyOnWriteArrayList<>();
 
 
 	private final JTable table;
@@ -105,7 +105,7 @@ public class FilesController
 			return;
 		}
 
-		FileItem item = fileSource.getFiles().get(table.getSelectedRow() - 1);
+		FileItem item = fileSource.listFiles().get(table.getSelectedRow() - 1);
 
 		if (item.isFolder())
 		{
@@ -164,7 +164,7 @@ public class FilesController
 	private void updateFilesFromSource()
 	{
 		model.getDataVector().clear();
-		List<FileItem> files = fileSource.getFiles();
+		List<FileItem> files = fileSource.listFiles();
 
 		model.insertRow(0, new Object[]{BACK_STRING});
 

@@ -4,7 +4,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import ru.kkey.core.FileItem;
-import ru.kkey.core.FileSource;
+import ru.kkey.core.Source;
 import ru.kkey.ui.preview.TextPreview;
 
 import java.io.InputStream;
@@ -17,7 +17,7 @@ import java.util.List;
  */
 public abstract class FileSourceTestBase
 {
-	FileSource fsSource;
+	Source fsSource;
 
 	@After
 	public void after()
@@ -41,7 +41,7 @@ public abstract class FileSourceTestBase
 
 		fsSource = createSource();
 
-		List<String> actual = toNames(fsSource.getFiles());
+		List<String> actual = toNames(fsSource.listFiles());
 
 		Assert.assertEquals(paths, actual);
 	}
@@ -61,7 +61,7 @@ public abstract class FileSourceTestBase
 
 		fsSource = createSource();
 
-		List<String> actual = toNames(fsSource.getFiles());
+		List<String> actual = toNames(fsSource.listFiles());
 		List<String> expected = Arrays.asList(
 				"dir 1",
 				"dir 2",
@@ -88,7 +88,7 @@ public abstract class FileSourceTestBase
 
 		fsSource.goInto(item("dir", true));
 
-		List<String> actual = toNames(fsSource.getFiles());
+		List<String> actual = toNames(fsSource.listFiles());
 		List<String> expected = Arrays.asList(
 				"dir 11",
 				"file 11"
@@ -118,7 +118,7 @@ public abstract class FileSourceTestBase
 		fsSource.goInto(item("dir 2", true));
 		fsSource.goInto(item("dir 21", true));
 
-		List<String> actual = toNames(fsSource.getFiles());
+		List<String> actual = toNames(fsSource.listFiles());
 		List<String> expected = Arrays.asList(
 				"dir 211",
 				"file 211",
@@ -144,11 +144,11 @@ public abstract class FileSourceTestBase
 
 		fsSource.goInto(item("dir", true));
 		fsSource.goInto(item("dir", true));
-		fsSource.getFiles(); //
+		fsSource.listFiles(); //
 
 		fsSource.goBack();
 
-		List<String> actual = toNames(fsSource.getFiles());
+		List<String> actual = toNames(fsSource.listFiles());
 		List<String> expected = Arrays.asList(
 				"dir",
 				"file 1",
@@ -177,11 +177,11 @@ public abstract class FileSourceTestBase
 		Assert.assertEquals("file 11", actual);
 	}
 
-	protected abstract FileSource createSource();
+	protected abstract Source createSource();
 
 	protected abstract TestFSBuilder createBuilder();
 
-	List<String> toNames(List<FileItem> items)
+	private List<String> toNames(List<FileItem> items)
 	{
 		List<String> result = new ArrayList<>();
 		for (FileItem item : items)
@@ -192,7 +192,7 @@ public abstract class FileSourceTestBase
 		return result;
 	}
 
-	FileItem item(String name, boolean isDir)
+	private FileItem item(String name, boolean isDir)
 	{
 		return new FileItem(name, isDir, null);
 	}
