@@ -1,8 +1,6 @@
 package ru.kkey.core;
 
 
-import java.nio.file.Path;
-
 /**
  * @author anstarovoyt
  */
@@ -10,24 +8,17 @@ public class FileItem implements Comparable<FileItem>
 {
 	private String name;
 	private boolean isFolder;
-	private Path path;
 
 
-	public FileItem(String name, boolean isFolder, Path path)
+	public FileItem(String name, boolean isFolder)
 	{
 		this.name = name.endsWith("/") && isFolder ? name.substring(0, name.length() - 1) : name;
 		this.isFolder = isFolder;
-		this.path = path;
 	}
 
 	public String getName()
 	{
 		return name;
-	}
-
-	public Path getPath()
-	{
-		return path;
 	}
 
 	public boolean isFolder()

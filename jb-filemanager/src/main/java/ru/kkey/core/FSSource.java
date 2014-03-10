@@ -105,7 +105,7 @@ public class FSSource implements Source
 			{
 				Path fileName = file.getFileName();
 				String stringName = fileName == null ? "" : fileName.toString();
-				result.put(new FileItem(stringName, Files.isDirectory(file), file), file);
+				result.put(new FileItem(stringName, Files.isDirectory(file)), file);
 			}
 
 			return result;
@@ -114,5 +114,10 @@ public class FSSource implements Source
 		{
 			throw new RuntimeException(e);
 		}
+	}
+
+	public ZipSource createZipSource(FileItem item)
+	{
+		return new ZipSource(geFileMap().get(item).toAbsolutePath().toString());
 	}
 }

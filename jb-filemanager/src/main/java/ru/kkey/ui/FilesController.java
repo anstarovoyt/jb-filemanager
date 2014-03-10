@@ -3,18 +3,16 @@ package ru.kkey.ui;
 import ru.kkey.core.FSSource;
 import ru.kkey.core.FileItem;
 import ru.kkey.core.Source;
-import ru.kkey.core.ZipSource;
 import ru.kkey.ui.preview.Preview;
 import ru.kkey.ui.preview.PreviewRegistry;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -30,25 +28,22 @@ public class FilesController
 
 	private CopyOnWriteArrayList<Source> stack = new CopyOnWriteArrayList<>();
 
+	private final FilesView view;
 
-	private final JTable table;
-	private final DefaultTableModel model;
-	private final JFrame mainFrame;
-
-	public FilesController(JTable table, DefaultTableModel model, JFrame mainFrame)
+	public FilesController(FilesView view)
 	{
-		this.table = table;
-		this.model = model;
-		this.mainFrame = mainFrame;
-		bindEnterKey();
+		this.view = view;
+	}
+
+	public void bind()
+	{
 		bindDoubleClick();
-		setRowStyle();
-		fillDefaultValues();
+		bindEnterKey();
 	}
 
 	private void bindDoubleClick()
 	{
-		table.addMouseListener(new MouseAdapter()
+		view.addMouseListener(new MouseAdapter()
 		{
 			public void mouseClicked(MouseEvent e)
 			{
@@ -60,92 +55,80 @@ public class FilesController
 		});
 	}
 
-	private void setRowStyle()
-	{
-		model.addColumn("Files");
-		table.setFont(new Font(table.getFont().getFontName(), 0, 15));
-		table.setRowHeight(20);
-		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-	}
-
-	private void fillDefaultValues()
-	{
-		updateTable();
-	}
-
 	private void bindEnterKey()
 	{
 		KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
-		table.getInputMap(JTable.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(enter, FilesController.ENTER);
-		table.getActionMap().put(FilesController.ENTER, new EnterAction());
-
+		view.addKeySelectionListener(enter, ENTER, new AbstractAction()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				onEnter();
+			}
+		});
 	}
 
 	private void onEnter()
 	{
-		if (table.getSelectedRow() < 0)
-		{
-			return;
-		}
 
-		if (table.getSelectedRow() == 0)
+		if (view.isSelectedBackLink())
 		{
 			if (fileSource.goBack())
 			{
-				updateTable();
+				updateFilesInView();
 			} else
 			{
 				if (!stack.isEmpty())
 				{
 					fileSource = stack.remove(stack.size() - 1);
-					updateTable();
+					updateFilesInView();
 				}
 			}
 
 			return;
 		}
 
-		FileItem item = fileSource.listFiles().get(table.getSelectedRow() - 1);
+		FileItem item = view.getSelectedValue();
 
 		if (item.isFolder())
 		{
 			fileSource.goInto(item);
-			updateTable();
+			updateFilesInView();
 		} else
 		{
 			if (!tryShowPreview(item))
 			{
 				String fileExtension = getFileExtension(item.getName());
 
-				if ("zip".equals(fileExtension))
+				if ("zip".equals(fileExtension) && fileSource instanceof FSSource)
 				{
 					stack.add(fileSource);
-					fileSource = new ZipSource(item.getPath().toString());
-					updateTable();
+					fileSource = ((FSSource) fileSource).createZipSource(item);
+					updateFilesInView();
 				}
 			}
 		}
 	}
 
+	public void updateFilesInView()
+	{
+		List<Object> items = new ArrayList<>();
+		items.add(BACK_STRING);
+		items.addAll(fileSource.listFiles());
+
+		view.setFilesAndUpdateView(items);
+	}
+
 	boolean tryShowPreview(FileItem item)
 	{
-		InputStream fileStream = fileSource.getFileStream(item);
-
 		String fileExtension = getFileExtension(item.getName());
 
 		for (Preview preview : PreviewRegistry.get().getPreviews())
 		{
 			if (preview.getExtensions().contains(fileExtension))
 			{
-				JDialog dialog = new JDialog(mainFrame, true);
-				dialog.setSize(new Dimension(800, 600));
-				dialog.setLocationRelativeTo(null);
-
-				//destroy because it is too hard clean form
-				//inner state of the dialog can be vastly changed
-				dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-				preview.render(dialog, fileStream);
-				dialog.setVisible(true);
+				InputStream fileStream = fileSource.getFileStream(item);
+				view.showDialog(preview, fileStream);
 				return true;
 			}
 		}
@@ -153,39 +136,8 @@ public class FilesController
 		return false;
 	}
 
-	private void updateTable()
-	{
-		table.clearSelection();
-		updateFilesFromSource();
-		model.fireTableDataChanged();
-		table.addRowSelectionInterval(0, 0);
-	}
-
-	private void updateFilesFromSource()
-	{
-		model.getDataVector().clear();
-		List<FileItem> files = fileSource.listFiles();
-
-		model.insertRow(0, new Object[]{BACK_STRING});
-
-		for (FileItem item : files)
-		{
-			model.addRow(new Object[]{item});
-		}
-	}
-
-	private class EnterAction extends AbstractAction
-	{
-
-		@Override
-		public void actionPerformed(ActionEvent e)
-		{
-			onEnter();
-		}
-	}
-
 	private String getFileExtension(String name)
 	{
-		return name.lastIndexOf('.') >= 0 ? name.substring(name.lastIndexOf('.') + 1) : "";
+		return name.lastIndexOf('.') >= 0 ? name.substring(name.lastIndexOf('.') + 1).toLowerCase() : "";
 	}
 }

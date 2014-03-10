@@ -88,7 +88,7 @@ public class FTPSource implements Source
 
 		for (FTPFile file : files)
 		{
-			result.add(new FileItem(file.getName(), file.isDirectory(), null));
+			result.add(new FileItem(file.getName(), file.isDirectory()));
 		}
 		Collections.sort(result);
 		return result;

@@ -27,6 +27,7 @@ public class ImagePreview implements Preview
 		try
 		{
 			BufferedImage img = ImageIO.read(fileStream);
+
 			JLabel picLabel = new JLabel(new ImageIcon(img));
 			JScrollPane scrollPane = new JScrollPane(picLabel);
 			dialog.add(scrollPane);

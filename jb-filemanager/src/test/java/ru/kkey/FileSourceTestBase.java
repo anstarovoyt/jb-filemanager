@@ -194,6 +194,6 @@ public abstract class FileSourceTestBase
 
 	private FileItem item(String name, boolean isDir)
 	{
-		return new FileItem(name, isDir, null);
+		return new FileItem(name, isDir);
 	}
 }
