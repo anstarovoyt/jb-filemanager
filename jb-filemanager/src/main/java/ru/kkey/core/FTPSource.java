@@ -14,6 +14,43 @@ import java.util.List;
  */
 public class FTPSource implements Source
 {
+	public static FTPSource create(String fullPath)
+	{
+		String path = fullPath;
+
+		String userName = "anonymous";
+		String userPswd = "";
+		int port = 21;
+		String host = path;
+
+		if (fullPath.contains("@"))
+		{
+			String[] split = fullPath.split("@");
+
+			String userWithPass = split[0];
+			path = split[1];
+
+			if (userWithPass.contains(":"))
+			{
+				String[] splitUserPass = fullPath.split(":");
+				userName = splitUserPass[0];
+				userPswd = splitUserPass[1];
+			} else
+			{
+				userName = userWithPass;
+			}
+		}
+
+		if (path.contains(":"))
+		{
+			String[] splitUserPass = fullPath.split(":");
+			host = splitUserPass[0];
+			port = Integer.parseInt(splitUserPass[1]);
+		}
+
+		return new FTPSource(host, port, userName, userPswd);
+	}
+
 	private final FTPClient client;
 
 	public FTPSource(String server, int port, String login, String pass)

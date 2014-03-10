@@ -3,7 +3,6 @@ package ru.kkey;
 import org.apache.ftpserver.ConnectionConfigFactory;
 import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
-import org.apache.ftpserver.ftplet.FtpException;
 import org.apache.ftpserver.listener.ListenerFactory;
 import org.apache.ftpserver.usermanager.impl.BaseUser;
 import org.junit.AfterClass;
@@ -23,7 +22,7 @@ public class FTPSourceTest extends FileSourceTestBase
 	private static FtpServer server;
 
 	@BeforeClass
-	public static void setupFTPServer() throws FtpException
+	public static void setupFTPServer() throws Exception
 	{
 		FtpServerFactory serverFactory = new FtpServerFactory();
 
@@ -43,6 +42,8 @@ public class FTPSourceTest extends FileSourceTestBase
 		serverFactory.addListener("default", factory.createListener());
 		server = serverFactory.createServer();
 		server.start();
+
+		Thread.sleep(100000);
 	}
 
 	@AfterClass

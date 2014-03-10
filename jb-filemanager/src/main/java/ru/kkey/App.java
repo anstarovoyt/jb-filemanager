@@ -11,8 +11,29 @@ import javax.swing.*;
  */
 public class App
 {
+	private static String OS = System.getProperty("os.name").toLowerCase();
+
 	public static void main(String[] args)
 	{
-		SwingUtilities.invokeLater(new SwingApp());
+		try
+		{
+			if (isMac())
+			{
+				System.setProperty("apple.laf.useScreenMenuBar", "true");
+				System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Test");
+				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			}
+			SwingUtilities.invokeLater(new SwingApp());
+		} catch (Exception e)
+		{
+			System.out.println("ClassNotFoundException: " + e.getMessage());
+		}
+
+	}
+
+
+	private static boolean isMac()
+	{
+		return OS.contains("mac");
 	}
 }

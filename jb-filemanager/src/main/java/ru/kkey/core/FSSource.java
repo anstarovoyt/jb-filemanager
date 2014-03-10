@@ -24,6 +24,10 @@ public class FSSource implements Source
 
 	public FSSource(Path path)
 	{
+		if (!Files.exists(path) || !Files.isDirectory(path))
+		{
+			throw new RuntimeException("Incorrect path");
+		}
 		this.currentPath = path;
 	}
 

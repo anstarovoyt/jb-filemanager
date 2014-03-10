@@ -1,8 +1,7 @@
 package ru.kkey.ui;
 
-import ru.kkey.core.FSSource;
-import ru.kkey.core.FileItem;
-import ru.kkey.core.Source;
+import ru.kkey.core.*;
+import ru.kkey.ui.menu.SelectMenuResult;
 import ru.kkey.ui.preview.Preview;
 import ru.kkey.ui.preview.PreviewRegistry;
 
@@ -14,6 +13,7 @@ import java.awt.event.MouseEvent;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -26,14 +26,12 @@ public class FilesController
 
 	private volatile Source fileSource = new FSSource("");
 
-	private CopyOnWriteArrayList<Source> stack = new CopyOnWriteArrayList<>();
-
+	private final CopyOnWriteArrayList<Source> stack = new CopyOnWriteArrayList<>();
 	private final FilesView view;
 
 	public FilesController(FilesView view)
 	{
 		this.view = view;
-		bind();
 	}
 
 	public void updateFilesInView()
@@ -45,10 +43,11 @@ public class FilesController
 		view.setFilesAndUpdateView(items);
 	}
 
-	private void bind()
+	public void bind()
 	{
 		bindDoubleClick();
 		bindEnterKey();
+		bindMenuActions();
 	}
 
 	private void bindDoubleClick()
@@ -74,6 +73,69 @@ public class FilesController
 			public void actionPerformed(ActionEvent e)
 			{
 				onEnter();
+			}
+		});
+	}
+
+	private void bindMenuActions()
+	{
+		view.addActionForMenu(FilesView.MENU_ITEM_LOCATION, new SelectMenuResult()
+		{
+			@Override
+			public void forResult(Map<String, String> result)
+			{
+				try
+				{
+					Source newSource = new FSSource(result.get(SelectMenuResult.PATH));
+
+					fileSource = newSource;
+					updateFilesInView();
+
+				} catch (RuntimeException e)
+				{
+					System.err.println(e);
+				}
+			}
+		});
+		view.addActionForMenu(FilesView.MENU_ITEM_ZIP, new SelectMenuResult()
+		{
+			@Override
+			public void forResult(Map<String, String> result)
+			{
+				try
+				{
+					Source newSource = new ZipSource(result.get(SelectMenuResult.PATH));
+
+					stack.add(fileSource);
+					fileSource = newSource;
+
+					updateFilesInView();
+
+				} catch (RuntimeException e)
+				{
+					System.err.println(e);
+				}
+			}
+		});
+
+		view.addActionForMenu(FilesView.MENU_ITEM_FTP, new SelectMenuResult()
+		{
+			@Override
+			public void forResult(Map<String, String> result)
+			{
+				try
+				{
+					Source newSource = FTPSource.create(result.get(SelectMenuResult.PATH));
+
+					stack.add(fileSource);
+					fileSource = newSource;
+
+					updateFilesInView();
+
+				} catch (RuntimeException e)
+				{
+					System.err.println(e);
+				}
 			}
 		});
 	}
