@@ -18,6 +18,16 @@ public class FTPSource implements Source
 	{
 		String path = fullPath;
 
+		if (path.endsWith("/"))
+		{
+			path = path.substring(0, path.length() - 1);
+		}
+
+		if (path.startsWith("ftp://"))
+		{
+			path = path.substring("ftp://".length());
+		}
+
 		String userName = "anonymous";
 		String userPswd = "";
 		int port = 21;

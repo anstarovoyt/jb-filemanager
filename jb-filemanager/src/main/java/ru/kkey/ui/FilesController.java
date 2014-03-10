@@ -100,42 +100,62 @@ public class FilesController
 		view.addActionForMenu(FilesView.MENU_ITEM_ZIP, new SelectMenuResult()
 		{
 			@Override
-			public void forResult(Map<String, String> result)
+			public void forResult(final Map<String, String> result)
 			{
-				try
+				view.setState("Open zip file ...");
+
+				SwingUtilities.invokeLater(new Runnable()
 				{
-					Source newSource = new ZipSource(result.get(SelectMenuResult.PATH));
+					@Override
+					public void run()
+					{
+						try
+						{
+							Source newSource = new ZipSource(result.get(SelectMenuResult.PATH));
 
-					stack.add(fileSource);
-					fileSource = newSource;
+							stack.add(fileSource);
+							fileSource = newSource;
 
-					updateFilesInView();
-
-				} catch (RuntimeException e)
-				{
-					System.err.println(e);
-				}
+							updateFilesInView();
+							view.setState("");
+						} catch (RuntimeException e)
+						{
+							view.setState("Error open zip: " + e.getMessage());
+						}
+					}
+				});
 			}
 		});
 
 		view.addActionForMenu(FilesView.MENU_ITEM_FTP, new SelectMenuResult()
 		{
 			@Override
-			public void forResult(Map<String, String> result)
+			public void forResult(final Map<String, String> result)
 			{
-				try
+				view.setState("Connect to ftp server ...");
+
+				SwingUtilities.invokeLater(new Runnable()
 				{
-					Source newSource = FTPSource.create(result.get(SelectMenuResult.PATH));
+					@Override
+					public void run()
+					{
+						try
+						{
+							Source newSource = FTPSource.create(result.get(SelectMenuResult.PATH));
 
-					stack.add(fileSource);
-					fileSource = newSource;
+							stack.add(fileSource);
+							fileSource = newSource;
 
-					updateFilesInView();
+							updateFilesInView();
+							view.setState("Connected");
 
-				} catch (RuntimeException e)
-				{
-					System.err.println(e);
-				}
+						} catch (RuntimeException e)
+						{
+							view.setState("Error open ftp: " + e.getMessage());
+						}
+					}
+
+				});
 			}
 		});
 	}
