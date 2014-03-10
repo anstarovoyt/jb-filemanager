@@ -2,8 +2,6 @@ package ru.kkey.ui.menu;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author anstarovoyt
@@ -38,9 +36,7 @@ public class OpenLocationAction implements MenuAction
 
 		if (null != s && !s.isEmpty())
 		{
-			Map<String, String> map = new HashMap<>();
-			map.put(SelectMenuResult.PATH, s);
-			result.forResult(map);
+			result.forResult(s);
 		}
 	}
 

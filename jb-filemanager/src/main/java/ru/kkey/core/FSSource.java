@@ -83,6 +83,16 @@ public class FSSource implements Source
 
 	}
 
+	@Override
+	public Source getSourceFor(FileItem item)
+	{
+		if ("zip".equals(item.getFileExtension()))
+		{
+			return createZipSource(item);
+		}
+		return null;
+	}
+
 	private Map<FileItem, Path> geFileMap()
 	{
 		if (!Files.exists(currentPath))
@@ -120,7 +130,7 @@ public class FSSource implements Source
 		}
 	}
 
-	public ZipSource createZipSource(FileItem item)
+	private ZipSource createZipSource(FileItem item)
 	{
 		return new ZipSource(geFileMap().get(item).toAbsolutePath().toString());
 	}

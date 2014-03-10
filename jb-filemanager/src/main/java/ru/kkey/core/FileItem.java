@@ -44,6 +44,11 @@ public class FileItem implements Comparable<FileItem>
 		return name.compareTo(o.getName());
 	}
 
+	public String getFileExtension()
+	{
+		return name.lastIndexOf('.') >= 0 ? name.substring(name.lastIndexOf('.') + 1).toLowerCase() : "";
+	}
+
 	@Override
 	public boolean equals(Object o)
 	{

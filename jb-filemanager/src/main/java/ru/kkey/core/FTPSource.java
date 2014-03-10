@@ -152,4 +152,10 @@ public class FTPSource implements Source
 			System.err.println(e);
 		}
 	}
+
+	@Override
+	public Source getSourceFor(FileItem item)
+	{
+		return null;
+	}
 }

@@ -17,4 +17,6 @@ public interface Source
 	boolean goBack();
 
 	void destroy();
+
+	Source getSourceFor(FileItem item);
 }

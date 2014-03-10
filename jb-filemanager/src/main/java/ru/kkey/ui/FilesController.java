@@ -13,7 +13,6 @@ import java.awt.event.MouseEvent;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -82,16 +81,12 @@ public class FilesController
 		view.addActionForMenu(FilesView.MENU_ITEM_LOCATION, new SelectMenuResult()
 		{
 			@Override
-			public void forResult(Map<String, String> result)
+			public void forResult(String result)
 			{
 				try
 				{
-					Source newSource = new FSSource(result.get(SelectMenuResult.PATH));
-					fileSource.destroy();
-
-					fileSource = newSource;
-
-					updateFilesInView();
+					Source newSource = new FSSource(result);
+					replaceFileSourceAndUpdateView(newSource);
 
 				} catch (RuntimeException e)
 				{
@@ -102,7 +97,7 @@ public class FilesController
 		view.addActionForMenu(FilesView.MENU_ITEM_ZIP, new SelectMenuResult()
 		{
 			@Override
-			public void forResult(final Map<String, String> result)
+			public void forResult(final String result)
 			{
 				view.setState("Open zip file ...");
 
@@ -113,12 +108,8 @@ public class FilesController
 					{
 						try
 						{
-							Source newSource = new ZipSource(result.get(SelectMenuResult.PATH));
-
-							stack.add(fileSource);
-							fileSource = newSource;
-
-							updateFilesInView();
+							Source newSource = new ZipSource(result);
+							replaceFileSourceAndUpdateView(newSource);
 							view.setState("");
 						} catch (RuntimeException e)
 						{
@@ -128,13 +119,12 @@ public class FilesController
 				});
 			}
 		});
-
 		view.addActionForMenu(FilesView.MENU_ITEM_FTP, new SelectMenuResult()
 		{
 			@Override
-			public void forResult(final Map<String, String> result)
+			public void forResult(final String result)
 			{
-				view.setState("Connect to ftp server ...");
+				view.setState("Connect to ftp server: " + result);
 
 				SwingUtilities.invokeLater(new Runnable()
 				{
@@ -143,13 +133,9 @@ public class FilesController
 					{
 						try
 						{
-							Source newSource = FTPSource.create(result.get(SelectMenuResult.PATH));
-
-							stack.add(fileSource);
-							fileSource = newSource;
-
-							updateFilesInView();
-							view.setState("Connected");
+							Source newSource = FTPSource.create(result);
+							replaceFileSourceAndUpdateView(newSource);
+							view.setState("Connected to " + result);
 
 						} catch (RuntimeException e)
 						{
@@ -162,23 +148,20 @@ public class FilesController
 		});
 	}
 
-	private void onEnter()
+	private void replaceFileSourceAndUpdateView(Source newSource)
+	{
+		fileSource.destroy();
+		fileSource = newSource;
+		updateFilesInView();
+		view.setState("");
+	}
+
+	private synchronized void onEnter()
 	{
 
 		if (view.isSelectedBackLink())
 		{
-			if (fileSource.goBack())
-			{
-				updateFilesInView();
-			} else
-			{
-				if (!stack.isEmpty())
-				{
-					fileSource.destroy();
-					fileSource = stack.remove(stack.size() - 1);
-					updateFilesInView();
-				}
-			}
+			tryGoBack();
 
 			return;
 		}
@@ -189,25 +172,39 @@ public class FilesController
 		{
 			fileSource.goInto(item);
 			updateFilesInView();
+			return;
+		}
+
+		if (!tryShowPreview(item))
+		{
+			//try to get child file source
+			Source newSource = fileSource.getSourceFor(item);
+			if (null != newSource)
+			{
+				stack.add(fileSource);
+				fileSource = newSource;
+				updateFilesInView();
+			}
+		}
+	}
+
+	private void tryGoBack()
+	{
+		if (fileSource.goBack())
+		{
+			updateFilesInView();
 		} else
 		{
-			if (!tryShowPreview(item))
+			if (!stack.isEmpty())
 			{
-				String fileExtension = getFileExtension(item.getName());
-
-				if ("zip".equals(fileExtension) && fileSource instanceof FSSource)
-				{
-					stack.add(fileSource);
-					fileSource = ((FSSource) fileSource).createZipSource(item);
-					updateFilesInView();
-				}
+				replaceFileSourceAndUpdateView(stack.remove(stack.size() - 1));
 			}
 		}
 	}
 
 	private boolean tryShowPreview(FileItem item)
 	{
-		String fileExtension = getFileExtension(item.getName());
+		String fileExtension = item.getFileExtension();
 
 		for (Preview preview : PreviewRegistry.get().getPreviews())
 		{
@@ -220,10 +217,5 @@ public class FilesController
 		}
 
 		return false;
-	}
-
-	private String getFileExtension(String name)
-	{
-		return name.lastIndexOf('.') >= 0 ? name.substring(name.lastIndexOf('.') + 1).toLowerCase() : "";
 	}
 }

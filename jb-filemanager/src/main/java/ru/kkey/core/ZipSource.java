@@ -46,4 +46,10 @@ public class ZipSource extends FSSource
 			throw new RuntimeException(e);
 		}
 	}
+
+	@Override
+	public Source getSourceFor(FileItem item)
+	{
+		return null;
+	}
 }
