@@ -17,22 +17,7 @@ public class TestZipBuilder extends TestFSBuilder
 	{
 		super.build(strings);
 
-		addToZip();
+		ZipUtil.pack(new File(DIR_FOR_TEST_TREE), new File(ZIP_NAME));
 	}
 
-	public void addToZip()
-	{
-
-		String zipFile = ZIP_NAME;
-
-		String srcDir = DIR_FOR_TEST_TREE;
-
-		try
-		{
-			ZipUtil.pack(new File(srcDir), new File(zipFile));
-		} catch (Exception e)
-		{
-			throw new RuntimeException(e);
-		}
-	}
 }

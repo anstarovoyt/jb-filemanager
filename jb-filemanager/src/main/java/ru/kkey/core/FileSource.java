@@ -15,4 +15,6 @@ public interface FileSource
 	InputStream getFileStream(FileItem item);
 
 	boolean goBack();
+
+	void destroy();
 }

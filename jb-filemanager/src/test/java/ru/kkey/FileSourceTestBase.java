@@ -1,5 +1,6 @@
 package ru.kkey;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import ru.kkey.core.FileItem;
@@ -16,6 +17,17 @@ import java.util.List;
  */
 public abstract class FileSourceTestBase
 {
+	FileSource fsSource;
+
+	@After
+	public void after()
+	{
+		if (fsSource != null)
+		{
+			fsSource.destroy();
+		}
+	}
+
 	@Test
 	public void testSimpleList()
 	{
@@ -26,7 +38,8 @@ public abstract class FileSourceTestBase
 				"file 1"
 		);
 		createBuilder().build(paths);
-		FileSource fsSource = createSource();
+
+		fsSource = createSource();
 
 		List<String> actual = toNames(fsSource.getFiles());
 
@@ -46,7 +59,7 @@ public abstract class FileSourceTestBase
 		);
 		createBuilder().build(paths);
 
-		FileSource fsSource = createSource();
+		fsSource = createSource();
 
 		List<String> actual = toNames(fsSource.getFiles());
 		List<String> expected = Arrays.asList(
@@ -70,7 +83,8 @@ public abstract class FileSourceTestBase
 				" file 11"
 		);
 		createBuilder().build(paths);
-		FileSource fsSource = createSource();
+
+		fsSource = createSource();
 
 		fsSource.goInto(item("dir", true));
 
@@ -98,7 +112,8 @@ public abstract class FileSourceTestBase
 				"  file 212"
 		);
 		createBuilder().build(paths);
-		FileSource fsSource = createSource();
+
+		fsSource = createSource();
 
 		fsSource.goInto(item("dir 2", true));
 		fsSource.goInto(item("dir 21", true));
@@ -124,7 +139,9 @@ public abstract class FileSourceTestBase
 				" file 2"
 		);
 		createBuilder().build(paths);
-		FileSource fsSource = createSource();
+
+		fsSource = createSource();
+
 		fsSource.goInto(item("dir", true));
 		fsSource.goInto(item("dir", true));
 		fsSource.getFiles(); //
@@ -150,7 +167,9 @@ public abstract class FileSourceTestBase
 				" file 12"
 		);
 		createBuilder().build(paths);
-		FileSource fsSource = createSource();
+
+		fsSource = createSource();
+
 		fsSource.goInto(item("dir", true));
 		InputStream fileStream = fsSource.getFileStream(item("file 11", false));
 		String actual = TextPreview.readInputStreamAsString(fileStream);
@@ -177,6 +196,4 @@ public abstract class FileSourceTestBase
 	{
 		return new FileItem(name, isDir, null);
 	}
-
-
 }

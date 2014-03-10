@@ -73,6 +73,12 @@ public class FSSource implements FileSource
 		return false;
 	}
 
+	@Override
+	public void destroy()
+	{
+
+	}
+
 	private Map<FileItem, Path> geFileMap()
 	{
 		if (!Files.exists(currentPath))

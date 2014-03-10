@@ -32,11 +32,15 @@ public class ZipSource extends FSSource
 		super(getZipInnerPath(pathToFile));
 	}
 
+	@Override
 	public void destroy()
 	{
 		try
 		{
-			currentPath.getFileSystem().close();
+			if (null != currentPath)
+			{
+				currentPath.getFileSystem().close();
+			}
 		} catch (IOException e)
 		{
 			throw new RuntimeException(e);
