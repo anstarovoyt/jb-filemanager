@@ -36,7 +36,7 @@ public class OpenLocationAction implements MenuAction
 
 		if (null != s && !s.isEmpty())
 		{
-			result.forResult(s);
+			result.process(s);
 		}
 	}
 

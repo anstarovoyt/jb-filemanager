@@ -81,7 +81,7 @@ public class FilesController
 		view.addActionForMenu(FilesView.MENU_ITEM_LOCATION, new SelectMenuResult()
 		{
 			@Override
-			public void forResult(String result)
+			public void process(String result)
 			{
 				try
 				{
@@ -97,7 +97,7 @@ public class FilesController
 		view.addActionForMenu(FilesView.MENU_ITEM_ZIP, new SelectMenuResult()
 		{
 			@Override
-			public void forResult(final String result)
+			public void process(final String result)
 			{
 				view.setState("Open zip file ...");
 
@@ -122,7 +122,7 @@ public class FilesController
 		view.addActionForMenu(FilesView.MENU_ITEM_FTP, new SelectMenuResult()
 		{
 			@Override
-			public void forResult(final String result)
+			public void process(final String result)
 			{
 				view.setState("Connect to ftp server: " + result);
 

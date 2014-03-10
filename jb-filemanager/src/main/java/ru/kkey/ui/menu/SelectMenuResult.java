@@ -5,5 +5,5 @@ package ru.kkey.ui.menu;
  */
 public interface SelectMenuResult
 {
-	void forResult(String path);
+	void process(String path);
 }
