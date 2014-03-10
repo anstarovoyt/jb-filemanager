@@ -1,10 +1,7 @@
 package ru.kkey.core;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.*;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author anstarovoyt
@@ -22,11 +19,7 @@ public class ZipSource extends FSSource
 				throw new RuntimeException("File doesn't exist");
 			}
 
-			URI uri = URI.create("jar:file:" + zipFile.toString());
-
-			//FileSystem fs = FileSystems.newFileSystem(zipFile, null);
-			Map<String, ?> env = new HashMap<>();
-			FileSystem fs = FileSystems.newFileSystem(uri, env);
+			FileSystem fs = FileSystems.newFileSystem(zipFile, null);
 			return fs.getPath("/");
 		} catch (IOException e)
 		{

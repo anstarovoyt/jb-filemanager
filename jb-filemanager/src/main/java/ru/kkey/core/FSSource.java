@@ -99,7 +99,7 @@ public class FSSource implements FileSource
 			{
 				Path fileName = file.getFileName();
 				String stringName = fileName == null ? "" : fileName.toString();
-				result.put(new FileItem(stringName, Files.isDirectory(file)), file);
+				result.put(new FileItem(stringName, Files.isDirectory(file), file), file);
 			}
 
 			return result;

@@ -3,6 +3,7 @@ package ru.kkey.ui;
 import ru.kkey.core.FSSource;
 import ru.kkey.core.FileItem;
 import ru.kkey.core.FileSource;
+import ru.kkey.core.ZipSource;
 import ru.kkey.ui.preview.Preview;
 import ru.kkey.ui.preview.PreviewRegistry;
 
@@ -15,6 +16,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @author anstarovoyt
@@ -25,6 +27,10 @@ public class FilesController
 	private static final String BACK_STRING = "/...";
 
 	private volatile FileSource fileSource = new FSSource("");
+
+	private CopyOnWriteArrayList<FileSource> stack = new CopyOnWriteArrayList<>();
+
+
 	private final JTable table;
 	private final DefaultTableModel model;
 	private final JFrame mainFrame;
@@ -58,7 +64,7 @@ public class FilesController
 	{
 		model.addColumn("Files");
 		table.setFont(new Font(table.getFont().getFontName(), 0, 15));
-		table.setRowHeight(30);
+		table.setRowHeight(20);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	}
 
@@ -84,8 +90,18 @@ public class FilesController
 
 		if (table.getSelectedRow() == 0)
 		{
-			fileSource.goBack();
-			updateTable();
+			if (fileSource.goBack())
+			{
+				updateTable();
+			} else
+			{
+				if (!stack.isEmpty())
+				{
+					fileSource = stack.remove(stack.size() - 1);
+					updateTable();
+				}
+			}
+
 			return;
 		}
 
@@ -97,11 +113,21 @@ public class FilesController
 			updateTable();
 		} else
 		{
-			tryShowPreview(item);
+			if (!tryShowPreview(item))
+			{
+				String fileExtension = getFileExtension(item.getName());
+
+				if ("zip".equals(fileExtension))
+				{
+					stack.add(fileSource);
+					fileSource = new ZipSource(item.getPath().toString());
+					updateTable();
+				}
+			}
 		}
 	}
 
-	void tryShowPreview(FileItem item)
+	boolean tryShowPreview(FileItem item)
 	{
 		InputStream fileStream = fileSource.getFileStream(item);
 
@@ -120,8 +146,11 @@ public class FilesController
 				dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 				preview.render(dialog, fileStream);
 				dialog.setVisible(true);
+				return true;
 			}
 		}
+
+		return false;
 	}
 
 	private void updateTable()
