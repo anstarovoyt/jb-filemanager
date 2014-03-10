@@ -1,29 +1,185 @@
 package ru.kkey;
 
-import org.junit.BeforeClass;
+import org.junit.Assert;
 import org.junit.Test;
+import ru.kkey.core.FSSource;
+import ru.kkey.core.FileItem;
+import ru.kkey.core.FileSource;
+import ru.kkey.ui.preview.TextPreview;
 
-import java.io.IOException;
-
-import static org.junit.Assert.assertTrue;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author anstarovoyt
  */
 public class FSFileSourceTest
 {
-	public static final String SRC_TEST_STRUCTURE_TXT = TestFSBuilder.COMMON_PATH + "/struct.txt";
+	public static final String COMPLEX_STRUCTURE_TXT = TestFSBuilder.COMMON_PATH + "/struct.txt";
 
-	@BeforeClass
-	public static void before() throws IOException
+	@Test
+	public void testSimpleList()
 	{
-		TestFSBuilder.build(SRC_TEST_STRUCTURE_TXT);
+		List<String> paths = Arrays.asList(
+				"dir 1",
+				"dir 2",
+				"dir 3",
+				"file 1"
+		);
+		new TestFSBuilder().build(paths);
+		FileSource fsSource = createSource();
+
+		List<String> actual = toNames(fsSource.getFiles());
+
+		Assert.assertEquals(paths, actual);
 	}
 
 	@Test
-	public void testFSFileSource()
+	public void testSimpleOrder()
 	{
-		assertTrue(true);
+		List<String> paths = Arrays.asList(
+				"dir 2",
+				"dir 1",
+				"dir 3",
+				"file 2",
+				"file 1",
+				"file 3"
+		);
+		new TestFSBuilder().build(paths);
+
+		FileSource fsSource = createSource();
+
+		List<String> actual = toNames(fsSource.getFiles());
+		List<String> expected = Arrays.asList(
+				"dir 1",
+				"dir 2",
+				"dir 3",
+				"file 1",
+				"file 2",
+				"file 3"
+		);
+
+		Assert.assertEquals(expected, actual);
+	}
+
+	@Test
+	public void testSimpleInto()
+	{
+		List<String> paths = Arrays.asList(
+				"dir",
+				" dir 11",
+				" file 11"
+		);
+		new TestFSBuilder().build(paths);
+		FileSource fsSource = createSource();
+
+		fsSource.goInto(item("dir", true));
+
+		List<String> actual = toNames(fsSource.getFiles());
+		List<String> expected = Arrays.asList(
+				"dir 11",
+				"file 11"
+		);
+
+		Assert.assertEquals(expected, actual);
+	}
+
+	@Test
+	public void testTreeInto()
+	{
+		List<String> paths = Arrays.asList(
+				"dir 1",
+				" dir 11",
+				" file 11",
+				"dir 2",
+				" dir 21",
+				"  dir 211",
+				"   dir 2111",
+				"  file 211",
+				"  file 212"
+		);
+		new TestFSBuilder().build(paths);
+		FileSource fsSource = createSource();
+
+		fsSource.goInto(item("dir 2", true));
+		fsSource.goInto(item("dir 21", true));
+
+		List<String> actual = toNames(fsSource.getFiles());
+		List<String> expected = Arrays.asList(
+				"dir 211",
+				"file 211",
+				"file 212"
+		);
+
+		Assert.assertEquals(expected, actual);
+	}
+
+	@Test
+	public void testSimpleBack()
+	{
+		List<String> paths = Arrays.asList(
+				"dir",
+				" dir",
+				"  file",
+				" file 1",
+				" file 2"
+		);
+		new TestFSBuilder().build(paths);
+		FileSource fsSource = createSource();
+		fsSource.goInto(item("dir", true));
+		fsSource.goInto(item("dir", true));
+		fsSource.getFiles(); //
+
+		fsSource.goBack();
+
+		List<String> actual = toNames(fsSource.getFiles());
+		List<String> expected = Arrays.asList(
+				"dir",
+				"file 1",
+				"file 2"
+		);
+
+		Assert.assertEquals(expected, actual);
+	}
+
+	@Test
+	public void testSimpleReadFile()
+	{
+		List<String> paths = Arrays.asList(
+				"dir",
+				" file 11",
+				" file 12"
+		);
+		new TestFSBuilder().build(paths);
+		FileSource fsSource = createSource();
+		fsSource.goInto(item("dir", true));
+		InputStream fileStream = fsSource.getFileStream(item("file 11", false));
+		String actual = TextPreview.readInputStreamAsString(fileStream);
+
+		Assert.assertEquals("file 11", actual);
+	}
+
+	FileSource createSource()
+	{
+		return new FSSource(TestFSBuilder.DIR_FOR_TEST_TREE);
+	}
+
+	List<String> toNames(List<FileItem> items)
+	{
+		List<String> result = new ArrayList<>();
+		for (FileItem item : items)
+		{
+			result.add(item.getName());
+		}
+
+		return result;
+	}
+
+	FileItem item(String name, boolean isDir)
+	{
+		return new FileItem(name, isDir);
 	}
 
 }

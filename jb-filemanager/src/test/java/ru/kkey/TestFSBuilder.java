@@ -4,8 +4,10 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,34 +20,54 @@ public class TestFSBuilder
 	public static final String COMMON_PATH = "src/test";
 	public static final String DIR_FOR_TEST_TREE = COMMON_PATH + "/testtree";
 
-	public static void build(String fileTreeSource) throws IOException
+	public void build(Path fileTreeSource)
 	{
-		List<String> strings = Files.readAllLines(Paths.get(fileTreeSource), Charset.defaultCharset());
-
-		if (Files.exists(Paths.get(DIR_FOR_TEST_TREE)))
+		try
 		{
-			//external lib because it is very boring impl recursive deletion
-			FileUtils.deleteDirectory(new File(DIR_FOR_TEST_TREE));
+			List<String> strings = Files.readAllLines(fileTreeSource, Charset.defaultCharset());
+			build(strings);
+
+		} catch (IOException e)
+		{
+			throw new RuntimeException(e);
 		}
+	}
 
-		Files.createDirectory(Paths.get(DIR_FOR_TEST_TREE));
-
-		List<String> path = new ArrayList<String>();
-		for (String currentValue : strings)
+	public void build(List<String> strings)
+	{
+		try
 		{
-			int count = countWhiteSpaces(currentValue);
-
-			path = path.subList(0, count);
-
-			String currentPath = DIR_FOR_TEST_TREE + "/" + join(path) + "/" + currentValue.trim();
-			if (isDir(currentValue))
+			if (Files.exists(Paths.get(DIR_FOR_TEST_TREE)))
 			{
-				Files.createDirectory(Paths.get(currentPath));
-				path.add(currentValue.trim());
-			} else
-			{
-				Files.createFile(Paths.get(currentPath));
+				//external lib because it is very boring impl recursive deletion
+				FileUtils.deleteDirectory(new File(DIR_FOR_TEST_TREE));
 			}
+
+			Files.createDirectory(Paths.get(DIR_FOR_TEST_TREE));
+
+			List<String> path = new ArrayList<>();
+			for (String currentValue : strings)
+			{
+				int count = countWhiteSpaces(currentValue);
+
+				path = path.subList(0, count);
+
+				String currentPath = DIR_FOR_TEST_TREE + "/" + join(path) + "/" + currentValue.trim();
+				if (isDir(currentValue))
+				{
+					Files.createDirectory(Paths.get(currentPath));
+					path.add(currentValue.trim());
+				} else
+				{
+					OutputStream out = Files.newOutputStream(Paths.get(currentPath));
+					out.write(currentValue.trim().getBytes());
+					out.flush();
+					out.close();
+				}
+			}
+		} catch (IOException e)
+		{
+			throw new RuntimeException(e);
 		}
 	}
 

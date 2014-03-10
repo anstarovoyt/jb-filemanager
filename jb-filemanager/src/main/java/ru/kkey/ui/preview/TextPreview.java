@@ -34,7 +34,7 @@ public class TextPreview implements Preview
 		dialog.add(scrollPane);
 	}
 
-	private String readInputStreamAsString(InputStream in)
+	public static String readInputStreamAsString(InputStream in)
 	{
 		try
 		{
