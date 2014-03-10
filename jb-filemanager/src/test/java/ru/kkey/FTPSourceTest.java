@@ -42,8 +42,6 @@ public class FTPSourceTest extends FileSourceTestBase
 		serverFactory.addListener("default", factory.createListener());
 		server = serverFactory.createServer();
 		server.start();
-
-		Thread.sleep(100000);
 	}
 
 	@AfterClass
