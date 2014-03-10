@@ -33,9 +33,19 @@ public class FilesController
 	public FilesController(FilesView view)
 	{
 		this.view = view;
+		bind();
 	}
 
-	public void bind()
+	public void updateFilesInView()
+	{
+		List<Object> items = new ArrayList<>();
+		items.add(BACK_STRING);
+		items.addAll(fileSource.listFiles());
+
+		view.setFilesAndUpdateView(items);
+	}
+
+	private void bind()
 	{
 		bindDoubleClick();
 		bindEnterKey();
@@ -110,16 +120,7 @@ public class FilesController
 		}
 	}
 
-	public void updateFilesInView()
-	{
-		List<Object> items = new ArrayList<>();
-		items.add(BACK_STRING);
-		items.addAll(fileSource.listFiles());
-
-		view.setFilesAndUpdateView(items);
-	}
-
-	boolean tryShowPreview(FileItem item)
+	private boolean tryShowPreview(FileItem item)
 	{
 		String fileExtension = getFileExtension(item.getName());
 

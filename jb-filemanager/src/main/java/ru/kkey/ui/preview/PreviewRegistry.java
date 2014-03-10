@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * The register contains all preview types
+ * The registry contains all preview types
  *
  * @author anstarovoyt
  * @see Preview

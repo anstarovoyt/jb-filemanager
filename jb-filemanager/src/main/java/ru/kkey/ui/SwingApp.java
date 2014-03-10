@@ -13,7 +13,6 @@ public class SwingApp implements Runnable
 		FilesView view = new FilesView();
 
 		FilesController controller = new FilesController(view);
-		controller.bind();
 		controller.updateFilesInView();
 
 		view.show();
