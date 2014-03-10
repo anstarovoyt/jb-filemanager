@@ -2,7 +2,6 @@ package ru.kkey;
 
 import org.junit.Assert;
 import org.junit.Test;
-import ru.kkey.core.FSSource;
 import ru.kkey.core.FileItem;
 import ru.kkey.core.FileSource;
 import ru.kkey.ui.preview.TextPreview;
@@ -15,10 +14,8 @@ import java.util.List;
 /**
  * @author anstarovoyt
  */
-public class FSFileSourceTest
+public abstract class FileSourceTestBase
 {
-	public static final String COMPLEX_STRUCTURE_TXT = TestFSBuilder.COMMON_PATH + "/struct.txt";
-
 	@Test
 	public void testSimpleList()
 	{
@@ -28,7 +25,7 @@ public class FSFileSourceTest
 				"dir 3",
 				"file 1"
 		);
-		new TestFSBuilder().build(paths);
+		createBuilder().build(paths);
 		FileSource fsSource = createSource();
 
 		List<String> actual = toNames(fsSource.getFiles());
@@ -47,7 +44,7 @@ public class FSFileSourceTest
 				"file 1",
 				"file 3"
 		);
-		new TestFSBuilder().build(paths);
+		createBuilder().build(paths);
 
 		FileSource fsSource = createSource();
 
@@ -72,7 +69,7 @@ public class FSFileSourceTest
 				" dir 11",
 				" file 11"
 		);
-		new TestFSBuilder().build(paths);
+		createBuilder().build(paths);
 		FileSource fsSource = createSource();
 
 		fsSource.goInto(item("dir", true));
@@ -100,7 +97,7 @@ public class FSFileSourceTest
 				"  file 211",
 				"  file 212"
 		);
-		new TestFSBuilder().build(paths);
+		createBuilder().build(paths);
 		FileSource fsSource = createSource();
 
 		fsSource.goInto(item("dir 2", true));
@@ -126,7 +123,7 @@ public class FSFileSourceTest
 				" file 1",
 				" file 2"
 		);
-		new TestFSBuilder().build(paths);
+		createBuilder().build(paths);
 		FileSource fsSource = createSource();
 		fsSource.goInto(item("dir", true));
 		fsSource.goInto(item("dir", true));
@@ -152,7 +149,7 @@ public class FSFileSourceTest
 				" file 11",
 				" file 12"
 		);
-		new TestFSBuilder().build(paths);
+		createBuilder().build(paths);
 		FileSource fsSource = createSource();
 		fsSource.goInto(item("dir", true));
 		InputStream fileStream = fsSource.getFileStream(item("file 11", false));
@@ -161,10 +158,9 @@ public class FSFileSourceTest
 		Assert.assertEquals("file 11", actual);
 	}
 
-	FileSource createSource()
-	{
-		return new FSSource(TestFSBuilder.DIR_FOR_TEST_TREE);
-	}
+	protected abstract FileSource createSource();
+
+	protected abstract TestFSBuilder createBuilder();
 
 	List<String> toNames(List<FileItem> items)
 	{
@@ -181,5 +177,6 @@ public class FSFileSourceTest
 	{
 		return new FileItem(name, isDir);
 	}
+
 
 }

@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,19 +18,6 @@ public class TestFSBuilder
 {
 	public static final String COMMON_PATH = "src/test";
 	public static final String DIR_FOR_TEST_TREE = COMMON_PATH + "/testtree";
-
-	public void build(Path fileTreeSource)
-	{
-		try
-		{
-			List<String> strings = Files.readAllLines(fileTreeSource, Charset.defaultCharset());
-			build(strings);
-
-		} catch (IOException e)
-		{
-			throw new RuntimeException(e);
-		}
-	}
 
 	public void build(List<String> strings)
 	{
@@ -60,7 +46,7 @@ public class TestFSBuilder
 				} else
 				{
 					OutputStream out = Files.newOutputStream(Paths.get(currentPath));
-					out.write(currentValue.trim().getBytes());
+					out.write(Charset.forName("UTF-8").encode(currentValue.trim()).array());
 					out.flush();
 					out.close();
 				}

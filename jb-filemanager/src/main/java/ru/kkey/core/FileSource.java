@@ -14,5 +14,5 @@ public interface FileSource
 
 	InputStream getFileStream(FileItem item);
 
-	void goBack();
+	boolean goBack();
 }

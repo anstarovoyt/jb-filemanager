@@ -27,6 +27,14 @@
             <version>2.4</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.zeroturnaround</groupId>
+            <artifactId>zt-zip</artifactId>
+            <version>1.7</version>
+            <scope>test</scope>
+        </dependency>
+
+
     </dependencies>
 
 

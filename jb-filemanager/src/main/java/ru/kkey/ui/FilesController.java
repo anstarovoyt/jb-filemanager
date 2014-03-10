@@ -4,7 +4,7 @@ import ru.kkey.core.FSSource;
 import ru.kkey.core.FileItem;
 import ru.kkey.core.FileSource;
 import ru.kkey.ui.preview.Preview;
-import ru.kkey.ui.preview.TextPreview;
+import ru.kkey.ui.preview.PreviewRegistry;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -14,7 +14,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -24,8 +23,6 @@ public class FilesController
 {
 	private static final String ENTER = "enter";
 	private static final String BACK_STRING = "/...";
-
-	public static final List<Preview> previews = Arrays.<Preview>asList(new TextPreview());
 
 	private volatile FileSource fileSource = new FSSource("");
 	private final JTable table;
@@ -110,7 +107,7 @@ public class FilesController
 
 		String fileExtension = getFileExtension(item.getName());
 
-		for (Preview preview : previews)
+		for (Preview preview : PreviewRegistry.get().getPreviews())
 		{
 			if (preview.getExtensions().contains(fileExtension))
 			{

@@ -10,7 +10,7 @@ public class FileItem implements Comparable<FileItem>
 
 	public FileItem(String name, boolean isFolder)
 	{
-		this.name = name;
+		this.name = name.endsWith("/") && isFolder ? name.substring(0, name.length() - 1) : name;
 		this.isFolder = isFolder;
 	}
 

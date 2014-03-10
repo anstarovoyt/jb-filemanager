@@ -15,11 +15,16 @@ import java.util.*;
  */
 public class FSSource implements FileSource
 {
-	private volatile Path currentPath;
+	volatile Path currentPath;
 
 	public FSSource(String defaultPath)
 	{
-		this.currentPath = Paths.get(defaultPath).toAbsolutePath();
+		this(Paths.get(defaultPath).toAbsolutePath());
+	}
+
+	public FSSource(Path path)
+	{
+		this.currentPath = path;
 	}
 
 	@Override
@@ -57,13 +62,15 @@ public class FSSource implements FileSource
 	}
 
 	@Override
-	public void goBack()
+	public boolean goBack()
 	{
 		Path parent = currentPath.getParent();
 		if (null != parent)
 		{
 			currentPath = parent;
+			return true;
 		}
+		return false;
 	}
 
 	private Map<FileItem, Path> geFileMap()
@@ -90,7 +97,9 @@ public class FSSource implements FileSource
 
 			for (Path file : files)
 			{
-				result.put(new FileItem(file.getFileName().toString(), Files.isDirectory(file)), file);
+				Path fileName = file.getFileName();
+				String stringName = fileName == null ? "" : fileName.toString();
+				result.put(new FileItem(stringName, Files.isDirectory(file)), file);
 			}
 
 			return result;
