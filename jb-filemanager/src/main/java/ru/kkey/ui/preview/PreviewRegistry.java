@@ -12,7 +12,7 @@ import java.util.List;
 
 public class PreviewRegistry
 {
-	public static final List<Preview> previews = Arrays.<Preview>asList(new TextPreview());
+	public static final List<Preview> previews = Arrays.asList(new TextPreview(), new ImagePreview());
 
 	private static final PreviewRegistry instance = new PreviewRegistry();
 
