@@ -87,8 +87,10 @@ public class FilesController
 				try
 				{
 					Source newSource = new FSSource(result.get(SelectMenuResult.PATH));
+					fileSource.destroy();
 
 					fileSource = newSource;
+
 					updateFilesInView();
 
 				} catch (RuntimeException e)
@@ -172,6 +174,7 @@ public class FilesController
 			{
 				if (!stack.isEmpty())
 				{
+					fileSource.destroy();
 					fileSource = stack.remove(stack.size() - 1);
 					updateFilesInView();
 				}
