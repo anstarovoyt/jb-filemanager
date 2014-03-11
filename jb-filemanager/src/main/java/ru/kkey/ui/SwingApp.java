@@ -14,7 +14,7 @@ public class SwingApp implements Runnable
 
         FilesController controller = new FilesController(view);
         controller.bind();
-        controller.updateFilesInView();
+        controller.updateFilesInViewAsync();
 
         view.show();
     }
