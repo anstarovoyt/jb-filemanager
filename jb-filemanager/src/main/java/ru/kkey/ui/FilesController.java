@@ -12,6 +12,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,6 +64,7 @@ public class FilesController
 				} catch (Exception e)
 				{
 					updateFilesInView(new ArrayList<FileItem>());
+					logger.log(Level.WARNING, e.getMessage(), e);
 					view.setStateMessage("Error file list loading: " + e.getMessage());
 				}
 			}
@@ -207,6 +209,7 @@ public class FilesController
 				try
 				{
 					get();
+					view.setStateMessage("Load files ...");
 					updateFilesInViewAsync();
 				} catch (Exception e)
 				{
@@ -312,10 +315,10 @@ public class FilesController
 		final Preview previewForProcess = preview;
 		view.setStateMessage("Loading preview for file " + item.getName());
 
-		new SwingWorker<Object, Void>()
+		new SwingWorker<byte[], Void>()
 		{
 			@Override
-			protected Object doInBackground() throws Exception
+			protected byte[] doInBackground() throws Exception
 			{
 				return fileSource.getFile(item);
 			}
@@ -325,10 +328,13 @@ public class FilesController
 			{
 				try
 				{
-					byte[] file = (byte[]) get();
+					byte[] file = get();
 					view.showDialog(previewForProcess, file);
 					view.resetStateMessage();
-
+				} catch (ExecutionException e)
+				{
+					logger.log(Level.WARNING, e.getMessage(), e);
+					view.setStateMessage("Cannot load file: " + e.getMessage());
 				} catch (Exception e)
 				{
 					logger.log(Level.WARNING, e.getMessage(), e);
