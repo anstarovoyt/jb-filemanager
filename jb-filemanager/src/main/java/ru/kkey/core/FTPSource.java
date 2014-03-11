@@ -1,161 +1,312 @@
 package ru.kkey.core;
 
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
-
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 
 /**
+ * Data source for ftp server navigation
+ *
  * @author anstarovoyt
  */
 public class FTPSource implements Source
 {
-	public static FTPSource create(String fullPath)
-	{
-		String path = fullPath;
+    public static int RETRY_COUNT = 1;
 
-		if (path.endsWith("/"))
-		{
-			path = path.substring(0, path.length() - 1);
-		}
+    public static final SourceFactory FACTORY = new SourceFactory()
+    {
+        @Override
+        public Source create(String path)
+        {
+            return FTPSource.create(path);
+        }
+    };
 
-		if (path.startsWith("ftp://"))
-		{
-			path = path.substring("ftp://".length());
-		}
+    private static final Logger logger = Logger.getAnonymousLogger();
 
-		String userName = "anonymous";
-		String userPswd = "";
-		int port = 21;
-		String host = path;
+    private static FTPSource create(String fullPath)
+    {
+        try
+        {
+            String prefix = "";
+            if (!fullPath.startsWith("ftp://"))
+            {
+                prefix = "ftp://";
+            }
+            return new FTPSource(new URL(prefix + fullPath));
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
 
-		if (fullPath.contains("@"))
-		{
-			String[] split = fullPath.split("@");
+    private final FTPClient client;
+    private final URL url;
 
-			String userWithPass = split[0];
-			path = split[1];
+    private final List<String> paths = new CopyOnWriteArrayList<String>();
 
-			if (userWithPass.contains(":"))
-			{
-				String[] splitUserPass = fullPath.split(":");
-				userName = splitUserPass[0];
-				userPswd = splitUserPass[1];
-			} else
-			{
-				userName = userWithPass;
-			}
-		}
+    public FTPSource(URL url)
+    {
+        this.client = new FTPClient();
+        this.url = url;
 
-		if (path.contains(":"))
-		{
-			String[] splitUserPass = fullPath.split(":");
-			host = splitUserPass[0];
-			port = Integer.parseInt(splitUserPass[1]);
-		}
+        try
+        {
+            connect();
 
-		return new FTPSource(host, port, userName, userPswd);
-	}
+            String path = url.getPath();
+            if (null != path && !path.isEmpty())
+            {
+                client.changeWorkingDirectory(path);
+                addToPath(path);
+            }
 
-	private final FTPClient client;
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
 
-	public FTPSource(String server, int port, String login, String pass)
-	{
-		client = new FTPClient();
-		try
-		{
-			client.connect(server, port);
-			client.login(login, pass);
-		} catch (IOException e)
-		{
-			throw new RuntimeException(e);
-		}
-	}
+    @Override
+    public void destroy()
+    {
+        try
+        {
+            client.disconnect();
+        }
+        catch (Exception e)
+        {
+            logger.log(Level.WARNING, e.getMessage(), e);
+        }
+    }
 
+    @Override
+    public byte[] getFile(FileItem item)
+    {
+        return getFile(item, 0);
+    }
 
-	@Override
-	public List<FileItem> listFiles()
-	{
-		List<FileItem> result = new ArrayList<>();
-		try
-		{
-			result.addAll(toFileItems(client.listFiles()));
+    @Override
+    public Source getSourceFor(FileItem item)
+    {
+        return null;
+    }
 
-			return result;
-		} catch (IOException e)
-		{
-			throw new RuntimeException(e);
-		}
-	}
+    @Override
+    public boolean goBack()
+    {
+        return goBack(0);
+    }
 
-	@Override
-	public void goInto(FileItem item)
-	{
-		try
-		{
-			client.changeWorkingDirectory(item.getName());
-		} catch (IOException e)
-		{
-			throw new RuntimeException(e);
-		}
-	}
+    @Override
+    public void goInto(FileItem item)
+    {
+        goInto(item, 0);
+    }
 
-	@Override
-	public InputStream getFileStream(FileItem item)
-	{
-		try
-		{
-			return client.retrieveFileStream(item.getName());
-		} catch (IOException e)
-		{
-			throw new RuntimeException(e);
-		}
-	}
+    @Override
+    public List<FileItem> listFiles()
+    {
+        return listFiles(0);
+    }
 
-	@Override
-	public boolean goBack()
-	{
-		try
-		{
-			return client.changeToParentDirectory();
-		} catch (IOException e)
-		{
-			throw new RuntimeException(e);
-		}
-	}
+    private void addToPath(String path)
+    {
+        if (path == null || path.isEmpty())
+        {
+            return;
+        }
 
+        String[] subPaths = path.split("/");
+        for (String sub : subPaths)
+        {
+            if (null != sub && !sub.isEmpty())
+            {
+                paths.add(sub);
+            }
+        }
+    }
 
-	List<FileItem> toFileItems(FTPFile[] files)
-	{
-		List<FileItem> result = new ArrayList<>();
+    private void checkConnection()
+    {
+        boolean isAvailable = false;
+        try
+        {
+            isAvailable = client.isAvailable();
+        }
+        catch (Exception e)
+        {
+            logger.log(Level.FINE, e.getMessage(), e);
+        }
 
-		for (FTPFile file : files)
-		{
-			result.add(new FileItem(file.getName(), file.isDirectory()));
-		}
-		Collections.sort(result);
-		return result;
-	}
+        if (!isAvailable)
+        {
+            reconnect();
+        }
+    }
 
-	@Override
-	public void destroy()
-	{
-		try
-		{
-			client.disconnect();
-		} catch (IOException e)
-		{
-			System.err.println(e);
-		}
-	}
+    private void connect()
+    {
+        try
+        {
+            String userWithPass = url.getUserInfo();
+            String login = null == userWithPass ? "anonymous" : userWithPass;
+            String pass = "";
 
-	@Override
-	public Source getSourceFor(FileItem item)
-	{
-		return null;
-	}
+            int port = url.getPort() == -1 ? 21 : url.getPort();
+
+            if (null != userWithPass && userWithPass.contains(":"))
+            {
+                String[] splitUserPass = userWithPass.split(":");
+                login = splitUserPass[0];
+                pass = splitUserPass[1];
+            }
+
+            client.connect(url.getHost(), port);
+            client.login(login, pass);
+
+            if (!paths.isEmpty())
+            {
+                client.changeWorkingDirectory(Utils.joinPath(paths, "/"));
+            }
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private byte[] getFile(FileItem item, int retry)
+    {
+        try
+        {
+            checkConnection();
+            return Utils.readInputSteamToByteArray(client.retrieveFileStream(item.getName()));
+        }
+        catch (IOException e)
+        {
+            if (retry < RETRY_COUNT)
+            {
+                logger.log(Level.WARNING, e.getMessage(), e);
+                reconnect();
+                return getFile(item, ++retry);
+            }
+            throw new RuntimeException(e);
+        }
+    }
+
+    private boolean goBack(int retry)
+    {
+        try
+        {
+            checkConnection();
+            boolean result = client.changeToParentDirectory();
+            if (result && paths.size() > 0)
+            {
+                paths.remove(paths.size() - 1);
+                return true;
+            }
+
+            if (!result)
+            {
+                //some problems. Try reconnect
+                reconnect();
+            }
+
+            return result;
+        }
+        catch (IOException e)
+        {
+            if (retry < RETRY_COUNT)
+            {
+                logger.log(Level.WARNING, e.getMessage(), e);
+                reconnect();
+                return goBack(++retry);
+            }
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void goInto(FileItem item, int retry)
+    {
+        try
+        {
+            checkConnection();
+            if (client.changeWorkingDirectory(item.getName()))
+            {
+                paths.add(item.getName());
+            }
+            else
+            {
+                //some problems. Try reconnect
+                reconnect();
+            }
+        }
+        catch (Exception e)
+        {
+            if (retry < RETRY_COUNT)
+            {
+                logger.log(Level.WARNING, e.getMessage(), e);
+                reconnect();
+                goInto(item, ++retry);
+            }
+            throw new RuntimeException(e);
+        }
+    }
+
+    private List<FileItem> listFiles(int retry)
+    {
+        List<FileItem> result = new ArrayList<>();
+        try
+        {
+            checkConnection();
+            result.addAll(toFileItems(client.listFiles()));
+            return result;
+        }
+        catch (IOException e)
+        {
+            if (retry < RETRY_COUNT)
+            {
+                logger.log(Level.WARNING, e.getMessage(), e);
+                reconnect();
+                return listFiles(++retry);
+            }
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void reconnect()
+    {
+        try
+        {
+            client.disconnect();
+        }
+        catch (Exception e)
+        {
+        }
+
+        connect();
+    }
+
+    private List<FileItem> toFileItems(FTPFile[] files)
+    {
+        List<FileItem> result = new ArrayList<>();
+
+        for (FTPFile file : files)
+        {
+            result.add(new FileItem(file.getName(), file.isDirectory()));
+        }
+        Collections.sort(result);
+        return result;
+    }
 }

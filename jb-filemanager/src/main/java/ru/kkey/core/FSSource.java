@@ -1,12 +1,16 @@
 package ru.kkey.core;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Data source for file system navigation
@@ -15,123 +19,140 @@ import java.util.*;
  */
 public class FSSource implements Source
 {
-	volatile Path currentPath;
+    public static final SourceFactory FACTORY = new SourceFactory()
+    {
+        @Override
+        public Source create(String path)
+        {
+            return new FSSource(path);
+        }
+    };
 
-	public FSSource(String defaultPath)
-	{
-		this(Paths.get(defaultPath).toAbsolutePath());
-	}
+    volatile Path currentPath;
 
-	public FSSource(Path path)
-	{
-		if (!Files.exists(path) || !Files.isDirectory(path))
-		{
-			throw new RuntimeException("Incorrect path");
-		}
-		this.currentPath = path;
-	}
+    public FSSource(Path path)
+    {
+        if (!Files.exists(path) || !Files.isDirectory(path))
+        {
+            throw new RuntimeException("Incorrect path");
+        }
+        this.currentPath = path;
+    }
 
-	@Override
-	public List<FileItem> listFiles()
-	{
-		Map<FileItem, Path> fileItemFileMap = geFileMap();
-		ArrayList<FileItem> list = new ArrayList<>(fileItemFileMap.keySet());
-		Collections.sort(list);
-		return list;
-	}
+    public FSSource(String defaultPath)
+    {
+        this(Paths.get(defaultPath).toAbsolutePath());
 
-	@Override
-	public void goInto(FileItem item)
-	{
-		Map<FileItem, Path> fileItemFileMap = geFileMap();
-		Path file = fileItemFileMap.get(item);
-		if (Files.isDirectory(file))
-		{
-			currentPath = file;
-		}
-	}
+    }
 
-	@Override
-	public InputStream getFileStream(FileItem item)
-	{
-		try
-		{
+    @Override
+    public void destroy()
+    {
 
-			return Files.newInputStream(geFileMap().get(item));
+    }
 
-		} catch (IOException e)
-		{
-			throw new RuntimeException(e);
-		}
-	}
+    @Override
+    public byte[] getFile(FileItem item)
+    {
+        try
+        {
+            return Utils.readInputSteamToByteArray(Files.newInputStream(geFileMap().get(item)));
+        }
+        catch (AccessDeniedException e)
+        {
+            throw new RuntimeException("Access denied error");
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
 
-	@Override
-	public boolean goBack()
-	{
-		Path parent = currentPath.getParent();
-		if (null != parent)
-		{
-			currentPath = parent;
-			return true;
-		}
-		return false;
-	}
+    @Override
+    public Source getSourceFor(FileItem item)
+    {
+        Path path = geFileMap().get(item);
 
-	@Override
-	public void destroy()
-	{
+        if (ZipSource.isZip(path))
+        {
+            return new ZipSource(path.toString());
+        }
 
-	}
+        return null;
+    }
 
-	@Override
-	public Source getSourceFor(FileItem item)
-	{
-		if ("zip".equals(item.getFileExtension()))
-		{
-			return createZipSource(item);
-		}
-		return null;
-	}
+    @Override
+    public boolean goBack()
+    {
+        Path parent = currentPath.getParent();
+        Path prev = currentPath;
+        if (null != parent)
+        {
+            currentPath = parent;
+            return !parent.equals(prev);
+        }
+        return false;
+    }
 
-	private Map<FileItem, Path> geFileMap()
-	{
-		if (!Files.exists(currentPath))
-		{
-			throw new RuntimeException("Path doesn't exist");
-		}
+    @Override
+    public void goInto(FileItem item)
+    {
+        Map<FileItem, Path> fileItemFileMap = geFileMap();
+        Path file = fileItemFileMap.get(item);
+        if (Files.isDirectory(file))
+        {
+            currentPath = file;
+        }
+    }
 
-		try
-		{
-			List<Path> files = new ArrayList<>();
+    @Override
+    public List<FileItem> listFiles()
+    {
+        Map<FileItem, Path> fileItemFileMap = geFileMap();
+        ArrayList<FileItem> list = new ArrayList<>(fileItemFileMap.keySet());
+        Collections.sort(list);
+        return list;
+    }
 
-			//file.listFiles returns incorrect name
-			DirectoryStream<Path> paths = Files.newDirectoryStream(currentPath);
+    private Map<FileItem, Path> geFileMap()
+    {
+        if (!Files.exists(currentPath))
+        {
+            throw new RuntimeException("Path doesn't exist");
+        }
 
-			for (Path path : paths)
-			{
-				files.add(path);
-			}
+        try
+        {
+            List<Path> files = new ArrayList<>();
 
+            //file.listFiles returns incorrect name
+            DirectoryStream<Path> paths = Files.newDirectoryStream(currentPath);
 
-			Map<FileItem, Path> result = new HashMap<>();
+            for (Path path : paths)
+            {
+                files.add(path);
+            }
 
-			for (Path file : files)
-			{
-				Path fileName = file.getFileName();
-				String stringName = fileName == null ? "" : fileName.toString();
-				result.put(new FileItem(stringName, Files.isDirectory(file)), file);
-			}
+            Map<FileItem, Path> result = new HashMap<>();
 
-			return result;
+            for (Path file : files)
+            {
+                Path fileName = file.getFileName();
+                String stringName = fileName == null ? "" : fileName.toString();
+                result.put(new FileItem(stringName, Files.isDirectory(file)), file);
+            }
 
-		} catch (IOException e)
-		{
-			throw new RuntimeException(e);
-		}
-	}
+            return result;
 
-	private ZipSource createZipSource(FileItem item)
-	{
-		return new ZipSource(geFileMap().get(item).toAbsolutePath().toString());
-	}
+        }
+        catch (AccessDeniedException e)
+        {
+            throw new RuntimeException("Access denied error");
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

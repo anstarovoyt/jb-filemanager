@@ -1,41 +1,39 @@
 package ru.kkey.ui.preview;
 
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.swing.ImageIcon;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JScrollPane;
 
 /**
+ * Image preview
+ *
  * @author anstarovoyt
  */
 public class ImagePreview implements Preview
 {
-	public static final Collection<String> extensions = Arrays.asList("jpg", "png", "gif");
+    public static final Set<String> extensions = new HashSet<>(Arrays.asList("jpg", "png", "gif", "tif", "jpeg"));
 
-	@Override
-	public Collection<String> getExtensions()
-	{
-		return extensions;
-	}
+    @Override
+    public Set<String> getExtensions()
+    {
+        return extensions;
+    }
 
-	@Override
-	public void render(JDialog dialog, InputStream fileStream)
-	{
-		try
-		{
-			BufferedImage img = ImageIO.read(fileStream);
+    @Override
+    public void render(JDialog dialog, byte[] file)
+    {
+        Image img = Toolkit.getDefaultToolkit().createImage(file);
 
-			JLabel picLabel = new JLabel(new ImageIcon(img));
-			JScrollPane scrollPane = new JScrollPane(picLabel);
-			dialog.add(scrollPane);
+        JLabel picLabel = new JLabel(new ImageIcon(img));
+        JScrollPane scrollPane = new JScrollPane(picLabel);
+        dialog.add(scrollPane);
 
-		} catch (IOException e)
-		{
-			throw new RuntimeException(e);
-		}
-
-	}
+    }
 }

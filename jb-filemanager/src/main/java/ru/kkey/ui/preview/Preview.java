@@ -1,15 +1,24 @@
 package ru.kkey.ui.preview;
 
-import javax.swing.*;
-import java.io.InputStream;
-import java.util.Collection;
+import java.util.Set;
+
+import javax.swing.JDialog;
 
 /**
+ * Common interface for all preview types
+ * New preview should be registered in {@link PreviewRegistry}
+ *
  * @author anstarovoyt
  */
 public interface Preview
 {
-	Collection<String> getExtensions();
+    /**
+     * @return set acceptable file extensions
+     */
+    Set<String> getExtensions();
 
-	void render(JDialog dialog, InputStream fileStream);
+    /**
+     * Add to dialog preview of the file
+     */
+    void render(JDialog dialog, byte[] file);
 }

@@ -7,13 +7,13 @@ package ru.kkey.core;
 public class FileItem implements Comparable<FileItem>
 {
 	private String name;
-	private boolean isFolder;
+	private boolean isDirectory;
 
 
-	public FileItem(String name, boolean isFolder)
+	public FileItem(String name, boolean isDirectory)
 	{
-		this.name = name.endsWith("/") && isFolder ? name.substring(0, name.length() - 1) : name;
-		this.isFolder = isFolder;
+		this.name = name.endsWith("/") && isDirectory ? name.substring(0, name.length() - 1) : name;
+		this.isDirectory = isDirectory;
 	}
 
 	public String getName()
@@ -21,24 +21,24 @@ public class FileItem implements Comparable<FileItem>
 		return name;
 	}
 
-	public boolean isFolder()
+	public boolean isDirectory()
 	{
-		return isFolder;
+		return isDirectory;
 	}
 
 	@Override
 	public String toString()
 	{
-		String prefix = isFolder ? " /" : "  ";
+		String prefix = isDirectory ? " /" : "  ";
 		return prefix + name;
 	}
 
 	@Override
 	public int compareTo(FileItem o)
 	{
-		if (isFolder() ^ o.isFolder())
+		if (isDirectory() ^ o.isDirectory())
 		{
-			return isFolder() ? -1 : 1;
+			return isDirectory() ? -1 : 1;
 		}
 
 		return name.compareTo(o.getName());
@@ -57,7 +57,7 @@ public class FileItem implements Comparable<FileItem>
 
 		FileItem fileItem = (FileItem) o;
 
-		if (isFolder != fileItem.isFolder) return false;
+		if (isDirectory != fileItem.isDirectory) return false;
 		return name.equals(fileItem.name);
 	}
 
@@ -65,7 +65,7 @@ public class FileItem implements Comparable<FileItem>
 	public int hashCode()
 	{
 		int result = name.hashCode();
-		result = 31 * result + (isFolder ? 1 : 0);
+		result = 31 * result + (isDirectory ? 1 : 0);
 		return result;
 	}
 }

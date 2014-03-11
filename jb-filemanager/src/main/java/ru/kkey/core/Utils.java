@@ -3,15 +3,43 @@ package ru.kkey.core;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 
 /**
  * @author anstarovoyt
  *
  */
-public class StreamUtils
+public class Utils
 {
+    public static String joinPath(Collection<String> items, String separator)
+    {
+        if (null == items)
+        {
+            return null;
+        }
+        StringBuilder result = new StringBuilder();
+        boolean isFirst = false;
+        for (String path : items)
+        {
+            if (!isFirst)
+            {
+                result.append(separator);
+            }
+            else
+            {
+                isFirst = true;
+            }
+            result.append(path);
+        }
+        return result.toString();
+    }
+
     public static byte[] readInputSteamToByteArray(InputStream is)
     {
+        if (null == is)
+        {
+            return new byte[0];
+        }
         try
         {
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();

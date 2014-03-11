@@ -1,7 +1,5 @@
 package ru.kkey;
 
-import org.apache.commons.io.FileUtils;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -11,13 +9,58 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
+
 /**
+ * Framework create file system tree for list of strings
+ *
+ * Spaces before dir/file names is used for define nested files/dirs.
+ *
+ * Example:
+ * <pre>
+ * dir
+ *  dir1
+ *  file1
+ * </pre>
+ * Here "dir1" is subdirectory for "dir".
+ * Directory "dir" contains nested file with name (and content) "file1"
+ *
+ *
  * @author anstarovoyt
  */
 public class TestFSBuilder
 {
 	public static final String COMMON_PATH = "src/test";
 	public static final String DIR_FOR_TEST_TREE = COMMON_PATH + "/testtree";
+
+	private static int countWhiteSpaces(String str)
+	{
+		int i = -1;
+		while (str.length() > ++i && Character.isWhitespace(str.charAt(i)))
+        {
+            ;
+        }
+		return i;
+	}
+
+	private static boolean isDir(String str)
+	{
+		return str.trim().startsWith("dir");
+	}
+
+	private static String join(List<String> str)
+	{
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < str.size(); i++)
+		{
+			if (i > 0)
+			{
+				builder.append('/');
+			}
+			builder.append(str.get(i));
+		}
+		return builder.toString();
+	}
 
 	public void build(List<String> strings)
 	{
@@ -55,31 +98,5 @@ public class TestFSBuilder
 		{
 			throw new RuntimeException(e);
 		}
-	}
-
-	private static int countWhiteSpaces(String str)
-	{
-		int i = -1;
-		while (str.length() > ++i && Character.isWhitespace(str.charAt(i))) ;
-		return i;
-	}
-
-	private static String join(List<String> str)
-	{
-		StringBuilder builder = new StringBuilder();
-		for (int i = 0; i < str.size(); i++)
-		{
-			if (i > 0)
-			{
-				builder.append('/');
-			}
-			builder.append(str.get(i));
-		}
-		return builder.toString();
-	}
-
-	private static boolean isDir(String str)
-	{
-		return str.trim().startsWith("dir");
 	}
 }

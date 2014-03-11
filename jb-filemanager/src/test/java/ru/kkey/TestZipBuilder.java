@@ -1,9 +1,9 @@
 package ru.kkey;
 
-import org.zeroturnaround.zip.ZipUtil;
-
 import java.io.File;
 import java.util.List;
+
+import org.zeroturnaround.zip.ZipUtil;
 
 /**
  * @author anstarovoyt
@@ -17,6 +17,7 @@ public class TestZipBuilder extends TestFSBuilder
 	{
 		super.build(strings);
 
+        //external lib because it is very boring impl recursive zipping
 		ZipUtil.pack(new File(DIR_FOR_TEST_TREE), new File(ZIP_NAME));
 	}
 

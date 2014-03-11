@@ -1,6 +1,5 @@
 package ru.kkey.core;
 
-import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -8,15 +7,49 @@ import java.util.List;
  */
 public interface Source
 {
-	List<FileItem> listFiles();
+    interface SourceFactory
+    {
+        Source create(String path);
+    }
 
-	void goInto(FileItem item);
+    /**
+     * Method for closing opened resources of the data source
+     */
+    void destroy();
 
-	InputStream getFileStream(FileItem item);
+    /**
+     * Here we doesn't use InputStream because
+     * file will be loaded in memory anyway.
+     *
+     * The second reason is "unstable" behavior of InputStream.
+     * For example, if we use ftp source connection can be reset
+     *
+     * @return byte file presentation
+     *
+     */
+    byte[] getFile(FileItem item);
 
-	boolean goBack();
+    /**
+     * @return child data source
+     * For example if we want go into zip archive
+     */
+    Source getSourceFor(FileItem item);
 
-	void destroy();
+    /**
+     * Change current directory to parent
+     * @return true if state changed false otherwise
+     */
+    boolean goBack();
 
-	Source getSourceFor(FileItem item);
+    /**
+     * Change current directory to nested item directory
+     */
+    void goInto(FileItem item);
+
+    /**
+     *
+     * @return sorted list of directories and files
+     * Order: {@link FileItem#compareTo(FileItem)}
+     */
+    List<FileItem> listFiles();
 }

@@ -12,17 +12,16 @@ import java.util.List;
 
 public class PreviewRegistry
 {
-	public static final List<Preview> previews = Arrays.asList(new TextPreview(), new ImagePreview());
+    private static final List<Preview> previews = Arrays.asList(new TextPreview(), new ImagePreview());
+    private static final PreviewRegistry instance = new PreviewRegistry();
 
-	private static final PreviewRegistry instance = new PreviewRegistry();
+    public static PreviewRegistry get()
+    {
+        return instance;
+    }
 
-	public static PreviewRegistry get()
-	{
-		return instance;
-	}
-
-	public List<Preview> getPreviews()
-	{
-		return previews;
-	}
+    public List<Preview> getPreviews()
+    {
+        return previews;
+    }
 }

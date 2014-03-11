@@ -1,25 +1,22 @@
 package ru.kkey.ui;
 
 /**
- * Swing the main frame
+ * Swing interface builder
  *
  * @author anstarovoyt
  */
 public class SwingApp implements Runnable
 {
-	@Override
-	public void run()
-	{
-		FilesView view = new FilesView();
+    @Override
+    public void run()
+    {
+        FilesView view = new FilesView();
 
-		FilesController controller = new FilesController(view);
-		controller.bind();
-		controller.updateFilesInView();
+        FilesController controller = new FilesController(view);
+        controller.bind();
+        controller.updateFilesInView();
 
-		view.show();
-	}
-
+        view.show();
+    }
 
 }
-
-

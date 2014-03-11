@@ -1,221 +1,280 @@
 package ru.kkey.ui;
 
-import ru.kkey.core.*;
-import ru.kkey.ui.menu.SelectMenuResult;
-import ru.kkey.ui.preview.Preview;
-import ru.kkey.ui.preview.PreviewRegistry;
-
-import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.swing.AbstractAction;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+
+import ru.kkey.core.FSSource;
+import ru.kkey.core.FTPSource;
+import ru.kkey.core.FileItem;
+import ru.kkey.core.Source;
+import ru.kkey.core.ZipSource;
+import ru.kkey.ui.menu.SelectMenuResult;
+import ru.kkey.ui.preview.Preview;
+import ru.kkey.ui.preview.PreviewRegistry;
 
 /**
+ * Controller for the application window
+ *
  * @author anstarovoyt
+ * @see FilesView
  */
 public class FilesController
 {
-	private static final String ENTER = "enter";
-	private static final String BACK_STRING = "/...";
+    private static final String ENTER = "enter";
+    private static final String BACK_STRING = "/...";
+    private static final Logger logger = Logger.getAnonymousLogger();
 
-	private volatile Source fileSource = new FSSource("");
+    private volatile Source fileSource = new FSSource("");
 
-	private final CopyOnWriteArrayList<Source> stack = new CopyOnWriteArrayList<>();
-	private final FilesView view;
+    private final CopyOnWriteArrayList<Source> prevSources = new CopyOnWriteArrayList<>();
+    private final FilesView view;
 
-	public FilesController(FilesView view)
-	{
-		this.view = view;
-	}
+    public FilesController(FilesView view)
+    {
+        this.view = view;
+    }
 
-	public void updateFilesInView()
-	{
-		List<Object> items = new ArrayList<>();
-		items.add(BACK_STRING);
-		items.addAll(fileSource.listFiles());
+    public void bind()
+    {
+        bindDoubleClick();
+        bindEnterKey();
+        bindMenuActions();
+    }
 
-		view.setFilesAndUpdateView(items);
-	}
+    public void updateFilesInView()
+    {
+        List<Object> items = new ArrayList<>();
+        items.add(BACK_STRING);
+        items.addAll(fileSource.listFiles());
 
-	public void bind()
-	{
-		bindDoubleClick();
-		bindEnterKey();
-		bindMenuActions();
-	}
+        view.setFilesAndUpdateView(items);
+    }
 
-	private void bindDoubleClick()
-	{
-		view.addMouseListener(new MouseAdapter()
-		{
-			public void mouseClicked(MouseEvent e)
-			{
-				if (e.getClickCount() == 2)
-				{
-					onEnter();
-				}
-			}
-		});
-	}
+    private void addMenuAction(final String code, final String stateLoadingMessage,
+            final Source.SourceFactory sourceFactory)
+    {
+        view.addActionForMenu(code, new SelectMenuResult()
+        {
+            @Override
+            public void process(final String result)
+            {
+                view.setStateMessage(stateLoadingMessage + result);
+                SwingUtilities.invokeLater(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        try
+                        {
+                            Source newSource = sourceFactory.create(result);
+                            replaceFileSourceAndUpdateView(newSource);
+                            view.resetStateMessage();
+                        }
+                        catch (RuntimeException e)
+                        {
+                            logger.log(Level.WARNING, e.getMessage(), e);
+                            view.setStateMessage("Error open path: " + e.getMessage());
+                        }
+                    }
+                });
+            }
+        });
+    }
 
-	private void bindEnterKey()
-	{
-		KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
-		view.addKeySelectionListener(enter, ENTER, new AbstractAction()
-		{
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				onEnter();
-			}
-		});
-	}
+    private void bindDoubleClick()
+    {
+        view.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+                if (e.getClickCount() == 2)
+                {
+                    onEnterAsync();
+                }
+            }
+        });
+    }
 
-	private void bindMenuActions()
-	{
-		view.addActionForMenu(FilesView.MENU_ITEM_LOCATION, new SelectMenuResult()
-		{
-			@Override
-			public void process(String result)
-			{
-				try
-				{
-					Source newSource = new FSSource(result);
-					replaceFileSourceAndUpdateView(newSource);
+    private void bindEnterKey()
+    {
+        KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
+        view.addKeySelectionListener(enter, ENTER, new AbstractAction()
+        {
+            private static final long serialVersionUID = 1L;
 
-				} catch (RuntimeException e)
-				{
-					System.err.println(e);
-				}
-			}
-		});
-		view.addActionForMenu(FilesView.MENU_ITEM_ZIP, new SelectMenuResult()
-		{
-			@Override
-			public void process(final String result)
-			{
-				view.setState("Open zip file ...");
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                onEnterAsync();
+            }
+        });
+    }
 
-				SwingUtilities.invokeLater(new Runnable()
-				{
-					@Override
-					public void run()
-					{
-						try
-						{
-							Source newSource = new ZipSource(result);
-							replaceFileSourceAndUpdateView(newSource);
-							view.setState("");
-						} catch (RuntimeException e)
-						{
-							view.setState("Error open zip: " + e.getMessage());
-						}
-					}
-				});
-			}
-		});
-		view.addActionForMenu(FilesView.MENU_ITEM_FTP, new SelectMenuResult()
-		{
-			@Override
-			public void process(final String result)
-			{
-				view.setState("Connect to ftp server: " + result);
+    private void bindMenuActions()
+    {
+        addMenuAction(FilesView.MENU_ITEM_LOCATION, "Open location: ", FSSource.FACTORY);
+        addMenuAction(FilesView.MENU_ITEM_ZIP, "Open zip file: ", ZipSource.FACTORY);
+        addMenuAction(FilesView.MENU_ITEM_FTP, "Connect to ftp server: ", FTPSource.FACTORY);
+    }
 
-				SwingUtilities.invokeLater(new Runnable()
-				{
-					@Override
-					public void run()
-					{
-						try
-						{
-							Source newSource = FTPSource.create(result);
-							replaceFileSourceAndUpdateView(newSource);
-							view.setState("Connected to " + result);
+    private void goBack()
+    {
+        if (!fileSource.goBack())
+        {
+            if (!prevSources.isEmpty())
+            {
+                replaceFileSourceAndUpdateView(prevSources.remove(prevSources.size() - 1));
+                return;
+            }
+        }
 
-						} catch (RuntimeException e)
-						{
-							view.setState("Error open ftp: " + e.getMessage());
-						}
-					}
+        updateFilesInView();
+    }
 
-				});
-			}
-		});
-	}
+    private void goInto(FileItem item)
+    {
+        fileSource.goInto(item);
+        try
+        {
+            updateFilesInView();
+        }
+        catch (RuntimeException e)
+        {
+            logger.log(Level.WARNING, e.getMessage(), e);
 
-	private void replaceFileSourceAndUpdateView(Source newSource)
-	{
-		fileSource.destroy();
-		fileSource = newSource;
-		updateFilesInView();
-		view.setState("");
-	}
+            List<Object> items = new ArrayList<>();
+            items.add(BACK_STRING);
+            view.setFilesAndUpdateView(items);
 
-	private synchronized void onEnter()
-	{
+            throw e;
+        }
+    }
 
-		if (view.isSelectedBackLink())
-		{
-			tryGoBack();
+    private void onEnterAsync()
+    {
+        if (view.getSelectedValue() != null)
+        {
+            view.setStateMessage("Open ...");
+            SwingUtilities.invokeLater(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    try
+                    {
+                        processEnterKey();
+                    }
+                    catch (RuntimeException e)
+                    {
+                        logger.log(Level.WARNING, e.getMessage(), e);
+                        view.setStateMessage("Cannot process action: " + e.getMessage());
+                    }
+                }
+            });
+        }
+    }
 
-			return;
-		}
+    private synchronized void processEnterKey()
+    {
+        if (view.isSelectedBackLink())
+        {
+            goBack();
+            view.resetStateMessage();
+            return;
+        }
 
-		FileItem item = view.getSelectedValue();
+        FileItem item = view.getSelectedValue();
 
-		if (item.isFolder())
-		{
-			fileSource.goInto(item);
-			updateFilesInView();
-			return;
-		}
+        if (item.isDirectory())
+        {
+            goInto(item);
+            view.resetStateMessage();
+            return;
+        }
 
-		if (!tryShowPreview(item))
-		{
-			//try to get child file source
-			Source newSource = fileSource.getSourceFor(item);
-			if (null != newSource)
-			{
-				stack.add(fileSource);
-				fileSource = newSource;
-				updateFilesInView();
-			}
-		}
-	}
+        if (tryShowPreview(item))
+        {
+            return;
+        }
 
-	private void tryGoBack()
-	{
-		if (fileSource.goBack())
-		{
-			updateFilesInView();
-		} else
-		{
-			if (!stack.isEmpty())
-			{
-				replaceFileSourceAndUpdateView(stack.remove(stack.size() - 1));
-			}
-		}
-	}
+        //try to get child file source
+        Source newSource = fileSource.getSourceFor(item);
+        if (null != newSource)
+        {
+            prevSources.add(fileSource);
+            fileSource = newSource;
+            updateFilesInView();
+            view.resetStateMessage();
+        }
+        else
+        {
+            if (!"".equals(item.getFileExtension()))
+            {
+                view.setStateMessage("Cannot find preview for the file extension '" + item.getFileExtension() + "'");
+            }
+            else
+            {
+                view.setStateMessage("Cannot find preview to the file '" + item.getName() + "'");
+            }
+        }
 
-	private boolean tryShowPreview(FileItem item)
-	{
-		String fileExtension = item.getFileExtension();
+    }
 
-		for (Preview preview : PreviewRegistry.get().getPreviews())
-		{
-			if (preview.getExtensions().contains(fileExtension))
-			{
-				InputStream fileStream = fileSource.getFileStream(item);
-				view.showDialog(preview, fileStream);
-				return true;
-			}
-		}
+    private void replaceFileSourceAndUpdateView(Source newSource)
+    {
+        fileSource.destroy();
+        fileSource = newSource;
+        updateFilesInView();
+        view.resetStateMessage();
+    }
 
-		return false;
-	}
+    private void showPreview(final FileItem item, Preview preview)
+    {
+        final Preview previewForProcess = preview;
+        view.setStateMessage("Loading preview for file " + item.getName());
+        SwingUtilities.invokeLater(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    byte[] file = fileSource.getFile(item);
+                    view.showDialog(previewForProcess, file);
+                    view.resetStateMessage();
+                }
+                catch (RuntimeException e)
+                {
+                    logger.log(Level.WARNING, e.getMessage(), e);
+                    view.setStateMessage("Error open preview: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    private boolean tryShowPreview(final FileItem item)
+    {
+        for (Preview preview : PreviewRegistry.get().getPreviews())
+        {
+            if (preview.getExtensions().contains(item.getFileExtension()))
+            {
+                showPreview(item, preview);
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
