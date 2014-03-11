@@ -42,9 +42,12 @@ public class FTPSource implements Source
 				prefix = "ftp://";
 			}
 			return new FTPSource(new URL(prefix + fullPath));
+		} catch (RuntimeException e)
+		{
+			throw e;
 		} catch (Exception e)
 		{
-			throw new RuntimeException(e);
+			throw new RuntimeException(e.getMessage(), e);
 		}
 	}
 
@@ -70,7 +73,7 @@ public class FTPSource implements Source
 
 		} catch (IOException e)
 		{
-			throw new RuntimeException(e);
+			throw new RuntimeException(e.getMessage(), e);
 		}
 	}
 
@@ -175,9 +178,12 @@ public class FTPSource implements Source
 			{
 				client.changeWorkingDirectory(Utils.joinPath(paths, "/"));
 			}
+		} catch (RuntimeException e)
+		{
+			throw e;
 		} catch (Exception e)
 		{
-			throw new RuntimeException(e);
+			throw new RuntimeException(e.getMessage(), e);
 		}
 	}
 
@@ -207,7 +213,7 @@ public class FTPSource implements Source
 				reconnect();
 				return getFile(item, ++retry);
 			}
-			throw new RuntimeException(e);
+			throw new RuntimeException(e.getMessage(), e);
 		}
 	}
 
@@ -238,7 +244,7 @@ public class FTPSource implements Source
 				reconnect();
 				return goBack(++retry);
 			}
-			throw new RuntimeException(e);
+			throw new RuntimeException(e.getMessage(), e);
 		}
 	}
 
@@ -263,7 +269,7 @@ public class FTPSource implements Source
 				reconnect();
 				goInto(item, ++retry);
 			}
-			throw new RuntimeException(e);
+			throw new RuntimeException(e.getMessage(), e);
 		}
 	}
 
@@ -283,7 +289,7 @@ public class FTPSource implements Source
 				reconnect();
 				return listFiles(++retry);
 			}
-			throw new RuntimeException(e);
+			throw new RuntimeException(e.getMessage(), e);
 		}
 	}
 

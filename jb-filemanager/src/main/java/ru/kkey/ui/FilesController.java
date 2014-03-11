@@ -64,8 +64,7 @@ public class FilesController
 				} catch (Exception e)
 				{
 					updateFilesInView(new ArrayList<FileItem>());
-					logger.log(Level.WARNING, e.getMessage(), e);
-					view.setStateMessage("Error file list loading: " + e.getMessage());
+					setError("Error file list loading: ", e);
 				}
 			}
 		}.execute();
@@ -106,19 +105,28 @@ public class FilesController
 					{
 						try
 						{
-							Source newSource = sourceFactory.create(result);
+							Source newSource = get();
 							replaceSourceAndUpdateView(newSource);
 							view.resetStateMessage();
 
-						} catch (RuntimeException e)
+						} catch (Exception e)
 						{
-							logger.log(Level.WARNING, e.getMessage(), e);
-							view.setStateMessage("Error open path: " + e.getMessage());
+							setError("Error open path: ", e);
 						}
 					}
 				}.execute();
 			}
 		});
+	}
+
+	private Throwable getCause(Exception e)
+	{
+		Throwable cause = e;
+		if (e.getCause() != null)
+		{
+			cause = e.getCause();
+		}
+		return cause;
 	}
 
 	private void bindDoubleClick()
@@ -185,8 +193,7 @@ public class FilesController
 					}
 				} catch (Exception e)
 				{
-					logger.log(Level.WARNING, e.getMessage(), e);
-					view.setStateMessage("Cannot go to parent: " + e.getMessage());
+					setError("Cannot go to parent: ", e);
 				}
 			}
 		}.execute();
@@ -213,12 +220,18 @@ public class FilesController
 					updateFilesInViewAsync();
 				} catch (Exception e)
 				{
-					logger.log(Level.WARNING, e.getMessage(), e);
-					view.setStateMessage("Cannot go to the directory: " + e.getMessage());
+					setError("Cannot go to the directory: ", e);
 				}
 			}
 		}.execute();
 
+	}
+
+	private void setError(String message, Exception e)
+	{
+		Throwable cause = getCause(e);
+		logger.log(Level.WARNING, cause.getMessage(), cause);
+		view.setStateMessage(message + cause.getMessage());
 	}
 
 	private void onEnter()
@@ -333,12 +346,10 @@ public class FilesController
 					view.resetStateMessage();
 				} catch (ExecutionException e)
 				{
-					logger.log(Level.WARNING, e.getMessage(), e);
-					view.setStateMessage("Cannot load file: " + e.getMessage());
+					setError("Cannot load file: ", e);
 				} catch (Exception e)
 				{
-					logger.log(Level.WARNING, e.getMessage(), e);
-					view.setStateMessage("Error open preview: " + e.getMessage());
+					setError("Error open preview: ", e);
 				}
 			}
 		}.execute();

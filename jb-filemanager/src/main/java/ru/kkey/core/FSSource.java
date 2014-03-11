@@ -58,7 +58,7 @@ public class FSSource implements Source
 			throw new RuntimeException("Access denied error");
 		} catch (IOException e)
 		{
-			throw new RuntimeException(e);
+			throw new RuntimeException(e.getMessage(), e);
 		}
 	}
 
@@ -158,11 +158,10 @@ public class FSSource implements Source
 			throw new RuntimeException("Access denied error");
 		} catch (IOException e)
 		{
-			throw new RuntimeException(e);
+			throw new RuntimeException(e.getMessage(), e);
 		} finally
 		{
 			lock.readLock().unlock();
 		}
 	}
-
 }
