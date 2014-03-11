@@ -11,12 +11,12 @@ public class FSSourceTest extends FileSourceTestBase
 	@Override
 	protected Source createSource()
 	{
-		return new FSSource(TestFSBuilder.DIR_FOR_TEST_TREE);
+		return new FSSource(FSBuilder.DIR_FOR_TEST_TREE);
 	}
 
 	@Override
-	protected TestFSBuilder createBuilder()
+	protected FSBuilder createBuilder()
 	{
-		return new TestFSBuilder();
+		return new FSBuilder();
 	}
 }

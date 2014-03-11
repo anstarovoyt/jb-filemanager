@@ -1,5 +1,7 @@
 package ru.kkey;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -9,13 +11,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
-
 /**
  * Framework create file system tree for list of strings
- *
+ * <p/>
  * Spaces before dir/file names is used for define nested files/dirs.
- *
+ * <p/>
  * Example:
  * <pre>
  * dir
@@ -25,10 +25,9 @@ import org.apache.commons.io.FileUtils;
  * Here "dir1" is subdirectory for "dir".
  * Directory "dir" contains nested file with name (and content) "file1"
  *
- *
  * @author anstarovoyt
  */
-public class TestFSBuilder
+public class FSBuilder
 {
 	public static final String COMMON_PATH = "src/test";
 	public static final String DIR_FOR_TEST_TREE = COMMON_PATH + "/testtree";
@@ -37,9 +36,8 @@ public class TestFSBuilder
 	{
 		int i = -1;
 		while (str.length() > ++i && Character.isWhitespace(str.charAt(i)))
-        {
-            ;
-        }
+		{
+		}
 		return i;
 	}
 

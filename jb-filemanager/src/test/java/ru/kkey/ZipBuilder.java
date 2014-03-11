@@ -1,14 +1,14 @@
 package ru.kkey;
 
+import org.zeroturnaround.zip.ZipUtil;
+
 import java.io.File;
 import java.util.List;
-
-import org.zeroturnaround.zip.ZipUtil;
 
 /**
  * @author anstarovoyt
  */
-public class TestZipBuilder extends TestFSBuilder
+public class ZipBuilder extends FSBuilder
 {
 	public static final String ZIP_NAME = COMMON_PATH + "/ziptest.zip";
 

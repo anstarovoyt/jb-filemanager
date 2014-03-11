@@ -11,12 +11,12 @@ public class ZipSourceTest extends FileSourceTestBase
 	@Override
 	protected Source createSource()
 	{
-		return new ZipSource(TestZipBuilder.ZIP_NAME);
+		return new ZipSource(ZipBuilder.ZIP_NAME);
 	}
 
 	@Override
-	protected TestFSBuilder createBuilder()
+	protected FSBuilder createBuilder()
 	{
-		return new TestZipBuilder();
+		return new ZipBuilder();
 	}
 }

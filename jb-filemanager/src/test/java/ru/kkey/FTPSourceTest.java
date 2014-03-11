@@ -48,7 +48,7 @@ public class FTPSourceTest extends FileSourceTestBase
         serverFactory.setConnectionConfig(connectionConfigFactory.createConnectionConfig());
 
         BaseUser user = new BaseUser();
-        user.setHomeDirectory(Paths.get(TestFSBuilder.DIR_FOR_TEST_TREE).toAbsolutePath().toString());
+        user.setHomeDirectory(Paths.get(FSBuilder.DIR_FOR_TEST_TREE).toAbsolutePath().toString());
         user.setName("anonymous");
         serverFactory.getUserManager().save(user);
 
@@ -105,9 +105,9 @@ public class FTPSourceTest extends FileSourceTestBase
     }
 
     @Override
-    protected TestFSBuilder createBuilder()
+    protected FSBuilder createBuilder()
     {
-        return new TestFSBuilder();
+        return new FSBuilder();
     }
 
     @Override
