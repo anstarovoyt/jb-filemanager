@@ -87,7 +87,7 @@ public class FTPSource implements Source
 	}
 
 	@Override
-	public byte[] getFile(FileItem item)
+	public synchronized byte[] getFile(FileItem item)
 	{
 		return getFile(item, 0);
 	}
@@ -99,19 +99,19 @@ public class FTPSource implements Source
 	}
 
 	@Override
-	public boolean goBack()
+	public synchronized boolean goBack()
 	{
 		return goBack(0);
 	}
 
 	@Override
-	public void goInto(FileItem item)
+	public synchronized void goInto(FileItem item)
 	{
 		goInto(item, 0);
 	}
 
 	@Override
-	public List<FileItem> listFiles()
+	public synchronized List<FileItem> listFiles()
 	{
 		return listFiles(0);
 	}

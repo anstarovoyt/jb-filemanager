@@ -3,6 +3,8 @@ package ru.kkey.core;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Data source for file system navigation
@@ -21,6 +23,8 @@ public class FSSource implements Source
 	};
 
 	volatile Path currentPath;
+
+	private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
 	public FSSource(Path path)
 	{
@@ -74,24 +78,38 @@ public class FSSource implements Source
 	@Override
 	public boolean goBack()
 	{
-		Path parent = currentPath.getParent();
-		Path prev = currentPath;
-		if (null != parent)
+		lock.writeLock().lock();
+		try
 		{
-			currentPath = parent;
-			return !parent.equals(prev);
+			Path parent = currentPath.getParent();
+			Path prev = currentPath;
+			if (null != parent)
+			{
+				currentPath = parent;
+				return !parent.equals(prev);
+			}
+			return false;
+		} finally
+		{
+			lock.writeLock().unlock();
 		}
-		return false;
 	}
 
 	@Override
 	public void goInto(FileItem item)
 	{
-		Map<FileItem, Path> fileItemFileMap = geFileMap();
-		Path file = fileItemFileMap.get(item);
-		if (Files.isDirectory(file))
+		lock.writeLock().lock();
+		try
 		{
-			currentPath = file;
+			Map<FileItem, Path> fileItemFileMap = geFileMap();
+			Path file = fileItemFileMap.get(item);
+			if (Files.isDirectory(file))
+			{
+				currentPath = file;
+			}
+		} finally
+		{
+			lock.writeLock().unlock();
 		}
 	}
 
@@ -106,13 +124,14 @@ public class FSSource implements Source
 
 	private Map<FileItem, Path> geFileMap()
 	{
-		if (!Files.exists(currentPath))
-		{
-			throw new RuntimeException("Path doesn't exist");
-		}
+		lock.readLock().lock();
 
 		try
 		{
+			if (!Files.exists(currentPath))
+			{
+				throw new RuntimeException("Path doesn't exist");
+			}
 			List<Path> files = new ArrayList<>();
 
 			//file.listFiles returns incorrect name
@@ -140,6 +159,9 @@ public class FSSource implements Source
 		} catch (IOException e)
 		{
 			throw new RuntimeException(e);
+		} finally
+		{
+			lock.readLock().unlock();
 		}
 	}
 
