@@ -35,7 +35,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ftpserver</groupId>
-            <artifactId>ftpserver</artifactId>
+            <artifactId>ftpserver-core</artifactId>
             <version>1.0.6</version>
             <exclusions>
                 <exclusion>
@@ -51,7 +51,6 @@
                     <artifactId>jcl-over-slf4j</artifactId>
                 </exclusion>
             </exclusions>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
