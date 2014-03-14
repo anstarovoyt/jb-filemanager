@@ -1,15 +1,18 @@
 package ru.kkey.ui.preview;
 
-import java.awt.Image;
-import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.swing.ImageIcon;
+import javax.imageio.ImageIO;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JScrollPane;
+import javax.swing.JPanel;
+
+import ru.kkey.ui.widget.AutoResizeImagePanel;
 
 /**
  * Image preview
@@ -29,11 +32,18 @@ public class ImagePreview implements Preview
     @Override
     public void render(JDialog dialog, byte[] file)
     {
-        Image img = Toolkit.getDefaultToolkit().createImage(file);
+        try
+        {
+            InputStream in = new ByteArrayInputStream(file);
+            BufferedImage imageRaw = ImageIO.read(in);
 
-        JLabel picLabel = new JLabel(new ImageIcon(img));
-        JScrollPane scrollPane = new JScrollPane(picLabel);
-        dialog.add(scrollPane);
+            JPanel scrollPane = new AutoResizeImagePanel(imageRaw);
+            dialog.add(scrollPane);
+        }
+        catch (IOException e)
+        {
+
+        }
 
     }
 }

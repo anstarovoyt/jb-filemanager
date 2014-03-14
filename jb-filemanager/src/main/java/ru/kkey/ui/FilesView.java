@@ -9,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseListener;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.AbstractAction;
@@ -122,6 +123,21 @@ public class FilesView
         return -1 == table.getSelectedRow() ? null : (T)table.getValueAt(table.getSelectedRow(), 0);
     }
 
+    public int getValueIndex(List<?> data, Object item)
+    {
+        if (null == item)
+        {
+            return 0;
+        }
+        int valueIndex = data.indexOf(item);
+        if (valueIndex < 0)
+        {
+            return 0;
+        }
+
+        return valueIndex;
+    }
+
     public boolean isSelectedBackLink()
     {
         return table.getSelectedRow() == 0;
@@ -132,7 +148,7 @@ public class FilesView
         stateMessage.setText(" ");
     }
 
-    public void setFilesAndUpdateView(java.util.List<?> files)
+    public void setFilesAndUpdateView(java.util.List<?> files, Object selectedItem)
     {
         tableModel.getDataVector().clear();
         table.clearSelection();
@@ -143,7 +159,9 @@ public class FilesView
 
         tableModel.fireTableDataChanged();
         table.requestFocus();
-        table.changeSelection(0, 0, false, false);
+
+        int selectionIndex = getValueIndex(files, selectedItem);
+        table.changeSelection(selectionIndex, 0, false, false);
     }
 
     public void setStateMessage(String newState)

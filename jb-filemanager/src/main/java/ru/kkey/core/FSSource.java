@@ -1,8 +1,16 @@
 package ru.kkey.core;
 
 import java.io.IOException;
-import java.nio.file.*;
-import java.util.*;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -76,19 +84,19 @@ public class FSSource implements Source
 	}
 
 	@Override
-	public boolean goBack()
+	public FileItem goBack()
 	{
 		lock.writeLock().lock();
 		try
 		{
 			Path parent = currentPath.getParent();
 			Path prev = currentPath;
-			if (null != parent)
+			if (null != parent && !parent.equals(prev))
 			{
 				currentPath = parent;
-				return !parent.equals(prev);
+                return pathToFileItem(prev);
 			}
-			return false;
+			return null;
 		} finally
 		{
 			lock.writeLock().unlock();
@@ -146,9 +154,8 @@ public class FSSource implements Source
 
 			for (Path file : files)
 			{
-				Path fileName = file.getFileName();
-				String stringName = fileName == null ? "" : fileName.toString();
-				result.put(new FileItem(stringName, Files.isDirectory(file)), file);
+				FileItem key = pathToFileItem(file);
+                result.put(key, file);
 			}
 
 			return result;
@@ -164,4 +171,12 @@ public class FSSource implements Source
 			lock.readLock().unlock();
 		}
 	}
+
+    private FileItem pathToFileItem(Path file)
+    {
+        Path fileName = file.getFileName();
+        String stringName = fileName == null ? "" : fileName.toString();
+        FileItem key = new FileItem(stringName, Files.isDirectory(file));
+        return key;
+    }
 }

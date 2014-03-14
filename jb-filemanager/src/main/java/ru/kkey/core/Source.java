@@ -37,9 +37,9 @@ public interface Source
 
     /**
      * Change current directory to parent
-     * @return true if state changed false otherwise
+     * @return old parent if currect path is changed otherwih
      */
-    boolean goBack();
+    FileItem goBack();
 
     /**
      * Change current directory to nested item directory

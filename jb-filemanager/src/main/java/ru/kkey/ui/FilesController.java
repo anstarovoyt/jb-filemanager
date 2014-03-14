@@ -1,11 +1,5 @@
 package ru.kkey.ui;
 
-import ru.kkey.core.*;
-import ru.kkey.ui.menu.SelectMenuResult;
-import ru.kkey.ui.preview.Preview;
-import ru.kkey.ui.preview.PreviewRegistry;
-
-import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -16,6 +10,20 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.AbstractAction;
+import javax.swing.KeyStroke;
+import javax.swing.SwingWorker;
+
+import ru.kkey.core.FSSource;
+import ru.kkey.core.FTPSource;
+import ru.kkey.core.FileItem;
+import ru.kkey.core.Source;
+import ru.kkey.core.Utils.Pair;
+import ru.kkey.core.ZipSource;
+import ru.kkey.ui.menu.SelectMenuResult;
+import ru.kkey.ui.preview.Preview;
+import ru.kkey.ui.preview.PreviewRegistry;
+
 /**
  * Controller for the application window
  *
@@ -24,348 +32,365 @@ import java.util.logging.Logger;
  */
 public class FilesController
 {
-	private static final String ENTER = "enter";
-	private static final String BACK_STRING = "/...";
-	private static final Logger logger = Logger.getAnonymousLogger();
+    private static final String ENTER = "enter";
+    private static final String BACK_STRING = "/...";
+    private static final Logger logger = Logger.getAnonymousLogger();
 
-	private volatile Source fileSource = new FSSource("");
+    private volatile Source fileSource = new FSSource("");
 
-	private final ArrayList<Source> prevSources = new ArrayList<>();
-	private final FilesView view;
+    private final ArrayList<Pair<Source, FileItem>> prevSources = new ArrayList<>();
+    private final FilesView view;
 
-	public FilesController(FilesView view)
-	{
-		this.view = view;
-	}
+    public FilesController(FilesView view)
+    {
+        this.view = view;
+    }
 
-	public void bind()
-	{
-		bindDoubleClick();
-		bindEnterKey();
-		bindMenuActions();
-	}
+    public void bind()
+    {
+        bindDoubleClick();
+        bindEnterKey();
+        bindMenuActions();
+    }
 
-	public void updateFilesInViewAsync()
-	{
-		new SwingWorker<List<FileItem>, Void>()
-		{
-			@Override
-			protected List<FileItem> doInBackground() throws Exception
-			{
-				return fileSource.listFiles();
-			}
+    public void updateFilesInView(List<FileItem> fileItems, FileItem selectedItem)
+    {
+        List<Object> items = new ArrayList<>();
+        items.add(BACK_STRING);
+        items.addAll(fileItems);
 
-			@Override
-			protected void done()
-			{
-				try
-				{
-					updateFilesInView(get());
-				} catch (Exception e)
-				{
-					updateFilesInView(new ArrayList<FileItem>());
-					setError("Error file list loading: ", e);
-				}
-			}
-		}.execute();
+        view.setFilesAndUpdateView(items, selectedItem);
+        view.resetStateMessage();
+    }
 
-	}
+    public void updateFilesInViewAsync()
+    {
+        updateFilesInViewAsync(null);
 
-	public void updateFilesInView(List<FileItem> fileItems)
-	{
-		List<Object> items = new ArrayList<>();
-		items.add(BACK_STRING);
-		items.addAll(fileItems);
+    }
 
-		view.setFilesAndUpdateView(items);
-		view.resetStateMessage();
-	}
+    private void addMenuAction(final String code, final String stateLoadingMessage,
+            final Source.SourceFactory sourceFactory)
+    {
+        view.addActionForMenu(code, new SelectMenuResult()
+        {
+            @Override
+            public void process(final String result)
+            {
+                view.setStateMessage(stateLoadingMessage + result);
 
+                new SwingWorker<Source, Void>()
+                {
+                    @Override
+                    protected Source doInBackground() throws Exception
+                    {
+                        return sourceFactory.create(result);
+                    }
 
-	private void addMenuAction(final String code, final String stateLoadingMessage,
-							   final Source.SourceFactory sourceFactory)
-	{
-		view.addActionForMenu(code, new SelectMenuResult()
-		{
-			@Override
-			public void process(final String result)
-			{
-				view.setStateMessage(stateLoadingMessage + result);
+                    @Override
+                    protected void done()
+                    {
+                        try
+                        {
+                            Source newSource = get();
+                            replaceSourceAndUpdateView(newSource, null);
+                            view.resetStateMessage();
 
-				new SwingWorker<Source, Void>()
-				{
-					@Override
-					protected Source doInBackground() throws Exception
-					{
-						return sourceFactory.create(result);
-					}
+                        }
+                        catch (Exception e)
+                        {
+                            setError("Error open path: ", e);
+                        }
+                    }
+                }.execute();
+            }
+        });
+    }
 
-					@Override
-					protected void done()
-					{
-						try
-						{
-							Source newSource = get();
-							replaceSourceAndUpdateView(newSource);
-							view.resetStateMessage();
+    private void bindDoubleClick()
+    {
+        view.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+                if (e.getClickCount() == 2)
+                {
+                    onEnter();
+                }
+            }
+        });
+    }
 
-						} catch (Exception e)
-						{
-							setError("Error open path: ", e);
-						}
-					}
-				}.execute();
-			}
-		});
-	}
+    private void bindEnterKey()
+    {
+        KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
+        view.addKeySelectionListener(enter, ENTER, new AbstractAction()
+        {
+            private static final long serialVersionUID = 1L;
 
-	private Throwable getCause(Exception e)
-	{
-		Throwable cause = e;
-		if (e.getCause() != null)
-		{
-			cause = e.getCause();
-		}
-		return cause;
-	}
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                onEnter();
+            }
+        });
+    }
 
-	private void bindDoubleClick()
-	{
-		view.addMouseListener(new MouseAdapter()
-		{
-			@Override
-			public void mouseClicked(MouseEvent e)
-			{
-				if (e.getClickCount() == 2)
-				{
-					onEnter();
-				}
-			}
-		});
-	}
+    private void bindMenuActions()
+    {
+        addMenuAction(FilesView.MENU_ITEM_LOCATION, "Open location: ", FSSource.FACTORY);
+        addMenuAction(FilesView.MENU_ITEM_ZIP, "Open zip file: ", ZipSource.FACTORY);
+        addMenuAction(FilesView.MENU_ITEM_FTP, "Connect to ftp server: ", FTPSource.FACTORY);
+    }
 
-	private void bindEnterKey()
-	{
-		KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
-		view.addKeySelectionListener(enter, ENTER, new AbstractAction()
-		{
-			private static final long serialVersionUID = 1L;
+    private Throwable getCause(Exception e)
+    {
+        Throwable cause = e;
+        if (e.getCause() != null)
+        {
+            cause = e.getCause();
+        }
+        return cause;
+    }
 
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				onEnter();
-			}
-		});
-	}
+    private void goBack()
+    {
+        new SwingWorker<FileItem, Void>()
+        {
+            @Override
+            protected FileItem doInBackground() throws Exception
+            {
+                return fileSource.goBack();
+            }
 
-	private void bindMenuActions()
-	{
-		addMenuAction(FilesView.MENU_ITEM_LOCATION, "Open location: ", FSSource.FACTORY);
-		addMenuAction(FilesView.MENU_ITEM_ZIP, "Open zip file: ", ZipSource.FACTORY);
-		addMenuAction(FilesView.MENU_ITEM_FTP, "Connect to ftp server: ", FTPSource.FACTORY);
-	}
+            @Override
+            protected void done()
+            {
+                try
+                {
+                    FileItem fileItem = get();
+                    if (null != fileItem)
+                    {
+                        updateFilesInViewAsync(fileItem);
+                        return;
+                    }
 
-	private void goBack()
-	{
-		new SwingWorker<Boolean, Void>()
-		{
-			@Override
-			protected Boolean doInBackground() throws Exception
-			{
-				return fileSource.goBack();
-			}
+                    if (!prevSources.isEmpty())
+                    {
+                        Pair<Source, FileItem> prevSource = prevSources.remove(prevSources.size() - 1);
+                        replaceSourceAndUpdateView(prevSource.key, prevSource.value);
+                    }
 
-			@Override
-			protected void done()
-			{
-				try
-				{
-					if (get())
-					{
-						updateFilesInViewAsync();
-						return;
-					}
+                    view.resetStateMessage();
+                }
+                catch (Exception e)
+                {
+                    setError("Cannot go to parent: ", e);
+                }
+            }
+        }.execute();
+    }
 
-					if (!prevSources.isEmpty())
-					{
-						replaceSourceAndUpdateView(prevSources.remove(prevSources.size() - 1));
-					}
-				} catch (Exception e)
-				{
-					setError("Cannot go to parent: ", e);
-				}
-			}
-		}.execute();
-	}
+    private void goInto(final FileItem item)
+    {
+        new SwingWorker<Void, Void>()
+        {
+            @Override
+            protected Void doInBackground() throws Exception
+            {
+                fileSource.goInto(item);
+                return null;
+            }
 
-	private void goInto(final FileItem item)
-	{
-		new SwingWorker<Void, Void>()
-		{
-			@Override
-			protected Void doInBackground() throws Exception
-			{
-				fileSource.goInto(item);
-				return null;
-			}
+            @Override
+            protected void done()
+            {
+                try
+                {
+                    get();
+                    view.setStateMessage("Load files ...");
+                    updateFilesInViewAsync();
+                }
+                catch (Exception e)
+                {
+                    setError("Cannot go to the directory: ", e);
+                }
+            }
+        }.execute();
 
-			@Override
-			protected void done()
-			{
-				try
-				{
-					get();
-					view.setStateMessage("Load files ...");
-					updateFilesInViewAsync();
-				} catch (Exception e)
-				{
-					setError("Cannot go to the directory: ", e);
-				}
-			}
-		}.execute();
+    }
 
-	}
+    private void onEnter()
+    {
+        if (view.getSelectedValue() != null)
+        {
+            view.setStateMessage("Open ...");
+            processEnterKey();
+        }
+    }
 
-	private void setError(String message, Exception e)
-	{
-		Throwable cause = getCause(e);
-		logger.log(Level.WARNING, cause.getMessage(), cause);
-		view.setStateMessage(message + cause.getMessage());
-	}
+    private void processEnterKey()
+    {
+        if (view.isSelectedBackLink())
+        {
+            goBack();
+            return;
+        }
 
-	private void onEnter()
-	{
-		if (view.getSelectedValue() != null)
-		{
-			view.setStateMessage("Open ...");
-			processEnterKey();
-		}
-	}
+        final FileItem item = view.getSelectedValue();
 
-	private void processEnterKey()
-	{
-		if (view.isSelectedBackLink())
-		{
-			goBack();
-			return;
-		}
+        if (item.isDirectory())
+        {
+            goInto(item);
+            return;
+        }
 
-		final FileItem item = view.getSelectedValue();
+        if (tryShowPreview(item))
+        {
+            return;
+        }
 
-		if (item.isDirectory())
-		{
-			goInto(item);
-			return;
-		}
+        tryGetChildSource(item);
+    }
 
-		if (tryShowPreview(item))
-		{
-			return;
-		}
+    private void replaceDataSource(Source newSource)
+    {
+        fileSource.destroy();
+        fileSource = newSource;
+    }
 
-		tryGetChildSource(item);
-	}
+    private void replaceSourceAndUpdateView(Source newSource, FileItem selectedItem)
+    {
+        replaceDataSource(newSource);
+        updateFilesInViewAsync(selectedItem);
+    }
 
-	private void tryGetChildSource(final FileItem item)
-	{
-		new SwingWorker<Source, Void>()
-		{
-			@Override
-			protected Source doInBackground() throws Exception
-			{
-				return fileSource.getSourceFor(item);
-			}
+    private void setError(String message, Exception e)
+    {
+        Throwable cause = getCause(e);
+        logger.log(Level.WARNING, cause.getMessage(), cause);
+        view.setStateMessage(message + cause.getMessage());
+    }
 
-			@Override
-			protected void done()
-			{
-				try
-				{
-					Source newSource = get();
-					if (null != newSource)
-					{
-						prevSources.add(fileSource);
-						fileSource = newSource;
-						updateFilesInViewAsync();
-					} else
-					{
-						setNotFoundPreviewMessageFor(item);
-					}
-				} catch (Exception e)
-				{
-					logger.log(Level.WARNING, e.getMessage(), e);
-				}
-			}
-		}.execute();
-	}
+    private void setNotFoundPreviewMessageFor(FileItem item)
+    {
+        if (!"".equals(item.getFileExtension()))
+        {
+            view.setStateMessage("Cannot find preview for the file extension '" + item.getFileExtension() + "'");
+        }
+        else
+        {
+            view.setStateMessage("Cannot find preview to the file '" + item.getName() + "'");
+        }
+    }
 
-	private void setNotFoundPreviewMessageFor(FileItem item)
-	{
-		if (!"".equals(item.getFileExtension()))
-		{
-			view.setStateMessage("Cannot find preview for the file extension '" + item.getFileExtension() + "'");
-		} else
-		{
-			view.setStateMessage("Cannot find preview to the file '" + item.getName() + "'");
-		}
-	}
+    private void showPreviewAsync(final FileItem item, Preview preview)
+    {
+        final Preview previewForProcess = preview;
+        view.setStateMessage("Loading preview for file " + item.getName());
 
-	private void replaceSourceAndUpdateView(Source newSource)
-	{
-		replaceDataSource(newSource);
-		updateFilesInViewAsync();
-	}
+        new SwingWorker<byte[], Void>()
+        {
+            @Override
+            protected byte[] doInBackground() throws Exception
+            {
+                return fileSource.getFile(item);
+            }
 
-	private void replaceDataSource(Source newSource)
-	{
-		fileSource.destroy();
-		fileSource = newSource;
-	}
+            @Override
+            protected void done()
+            {
+                try
+                {
+                    byte[] file = get();
+                    view.showDialog(previewForProcess, file);
+                    view.resetStateMessage();
+                }
+                catch (ExecutionException e)
+                {
+                    setError("Cannot load file: ", e);
+                }
+                catch (Exception e)
+                {
+                    setError("Error open preview: ", e);
+                }
+            }
+        }.execute();
+    }
 
-	private void showPreviewAsync(final FileItem item, Preview preview)
-	{
-		final Preview previewForProcess = preview;
-		view.setStateMessage("Loading preview for file " + item.getName());
+    private void tryGetChildSource(final FileItem item)
+    {
+        new SwingWorker<Source, Void>()
+        {
+            @Override
+            protected Source doInBackground() throws Exception
+            {
+                return fileSource.getSourceFor(item);
+            }
 
-		new SwingWorker<byte[], Void>()
-		{
-			@Override
-			protected byte[] doInBackground() throws Exception
-			{
-				return fileSource.getFile(item);
-			}
+            @Override
+            protected void done()
+            {
+                try
+                {
+                    Source newSource = get();
+                    if (null != newSource)
+                    {
+                        prevSources.add(new Pair<>(fileSource, item));
+                        fileSource = newSource;
+                        updateFilesInViewAsync();
+                    }
+                    else
+                    {
+                        setNotFoundPreviewMessageFor(item);
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.log(Level.WARNING, e.getMessage(), e);
+                }
+            }
+        }.execute();
+    }
 
-			@Override
-			protected void done()
-			{
-				try
-				{
-					byte[] file = get();
-					view.showDialog(previewForProcess, file);
-					view.resetStateMessage();
-				} catch (ExecutionException e)
-				{
-					setError("Cannot load file: ", e);
-				} catch (Exception e)
-				{
-					setError("Error open preview: ", e);
-				}
-			}
-		}.execute();
-	}
+    private boolean tryShowPreview(final FileItem item)
+    {
+        for (Preview preview : PreviewRegistry.get().getPreviews())
+        {
+            if (preview.getExtensions().contains(item.getFileExtension()))
+            {
+                showPreviewAsync(item, preview);
+                return true;
+            }
+        }
 
-	private boolean tryShowPreview(final FileItem item)
-	{
-		for (Preview preview : PreviewRegistry.get().getPreviews())
-		{
-			if (preview.getExtensions().contains(item.getFileExtension()))
-			{
-				showPreviewAsync(item, preview);
-				return true;
-			}
-		}
+        return false;
+    }
 
-		return false;
-	}
+    private void updateFilesInViewAsync(final FileItem selectedValue)
+    {
+        new SwingWorker<List<FileItem>, Void>()
+        {
+            @Override
+            protected List<FileItem> doInBackground() throws Exception
+            {
+                return fileSource.listFiles();
+            }
+
+            @Override
+            protected void done()
+            {
+                try
+                {
+                    updateFilesInView(get(), selectedValue);
+                }
+                catch (Exception e)
+                {
+                    updateFilesInView(new ArrayList<FileItem>(), selectedValue);
+                    setError("Error file list loading: ", e);
+                }
+            }
+        }.execute();
+    }
 }
