@@ -42,7 +42,7 @@ public class ImagePreview implements Preview
         }
         catch (IOException e)
         {
-
+            throw new RuntimeException(e.getMessage(), e);
         }
 
     }
