@@ -15,13 +15,24 @@ public class AutoResizeImagePanel extends JPanel
 {
 	private static final long serialVersionUID = 1L;
 
+	static final Map<RenderingHints.Key, Object> hints = new HashMap<>();
+
+	static
+	{
+		hints.put(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_SPEED);
+		hints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+		hints.put(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_DISABLE);
+		hints.put(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
+		hints.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+		hints.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+	}
+
 	private final BufferedImage image;
 	private final int imageWidth;
 	private final int imageHeight;
 	private Image prevImage;
 	private int prevWidth = -1;
 	private int prevHeight = -1;
-
 
 
 	public AutoResizeImagePanel(BufferedImage image)
@@ -37,7 +48,7 @@ public class AutoResizeImagePanel extends JPanel
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D) g;
 
-		setHits(g2);
+		g2.addRenderingHints(hints);
 
 		int w = getWidth();
 		int h = getHeight();
@@ -55,21 +66,9 @@ public class AutoResizeImagePanel extends JPanel
 			prevHeight = height;
 			prevWidth = width;
 		}
-		int x = (w - width) / 2;
-		int y = (h - height) / 2;
-		g2.drawImage(prevImage, x, y, this);
-	}
-
-	private void setHits(Graphics2D g2)
-	{
-		Map<RenderingHints.Key, Object> hits = new HashMap<>();
-		hits.put(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_SPEED);
-		hits.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
-		hits.put(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_DISABLE);
-		hits.put(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
-		hits.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-		hits.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-		g2.addRenderingHints(hits);
+		int startX = (w - width) / 2;
+		int startY = (h - height) / 2;
+		g2.drawImage(prevImage, startX, startY, this);
 	}
 
 	private int getImageHeight()
@@ -87,7 +86,7 @@ public class AutoResizeImagePanel extends JPanel
 		GraphicsConfiguration gc = getConfiguration();
 		BufferedImage newImage = gc.createCompatibleImage(image.getWidth(), image.getHeight(), Transparency.BITMASK);
 		Graphics2D graphics = (Graphics2D) newImage.getGraphics();
-		setHits(graphics);
+		graphics.addRenderingHints(hints);
 		graphics.drawImage(image, 0, 0, null);
 		graphics.dispose();
 		return newImage;
@@ -108,7 +107,7 @@ public class AutoResizeImagePanel extends JPanel
 				targetHeight,
 				BufferedImage.TYPE_INT_ARGB);
 		Graphics2D resultGraphics = result.createGraphics();
-		setHits(resultGraphics);
+		resultGraphics.addRenderingHints(hints);
 		resultGraphics.drawImage(src, 0, 0, targetWidth, targetHeight, null);
 		resultGraphics.dispose();
 		return result;
