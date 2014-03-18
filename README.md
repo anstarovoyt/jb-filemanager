@@ -7,3 +7,5 @@ Overview
 ========
 
 [![screenshot ](https://raw.github.com/anstarovoyt/jb-filemanager/master/ScreenSFM.png)](#features)
+
+[![screenshot ](https://raw.github.com/anstarovoyt/jb-filemanager/master/PreviewScreenSFM.png)](#features)
