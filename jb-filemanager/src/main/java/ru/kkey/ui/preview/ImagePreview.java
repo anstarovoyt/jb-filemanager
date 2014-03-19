@@ -1,9 +1,5 @@
 package ru.kkey.ui.preview;
 
-import ru.kkey.ui.widget.AutoResizeImagePanel;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -11,6 +7,11 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.imageio.ImageIO;
+import javax.swing.JPanel;
+
+import ru.kkey.ui.widget.AutoResizeImagePanel;
 
 /**
  * Image preview
@@ -28,7 +29,7 @@ public class ImagePreview implements Preview
 	}
 
 	@Override
-	public void render(JDialog dialog, byte[] file)
+	public void render(JPanel dialogPanel, byte[] file)
 	{
 		try
 		{
@@ -37,7 +38,7 @@ public class ImagePreview implements Preview
 
 			JPanel scrollPane = new AutoResizeImagePanel(imageRaw);
 
-			dialog.add(scrollPane);
+			dialogPanel.add(scrollPane);
 		} catch (IOException e)
 		{
 			throw new RuntimeException(e.getMessage(), e);

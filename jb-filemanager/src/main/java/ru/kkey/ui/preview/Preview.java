@@ -2,7 +2,7 @@ package ru.kkey.ui.preview;
 
 import java.util.Set;
 
-import javax.swing.JDialog;
+import javax.swing.JPanel;
 
 /**
  * Common interface for all preview types
@@ -20,5 +20,5 @@ public interface Preview
     /**
      * Add to dialog preview of the file
      */
-    void render(JDialog dialog, byte[] file);
+    void render(JPanel dialogPanel, byte[] file);
 }

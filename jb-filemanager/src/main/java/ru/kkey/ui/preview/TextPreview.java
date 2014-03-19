@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.swing.JDialog;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
@@ -27,7 +27,7 @@ public class TextPreview implements Preview
     }
 
     @Override
-    public void render(JDialog dialog, byte[] file)
+    public void render(JPanel dialog, byte[] file)
     {
         JTextArea textArea = new JTextArea();
         textArea.setWrapStyleWord(true);

@@ -8,6 +8,8 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +39,7 @@ import ru.kkey.ui.menu.OpenFTPAction;
 import ru.kkey.ui.menu.OpenLocationAction;
 import ru.kkey.ui.menu.OpenZipAction;
 import ru.kkey.ui.menu.SelectMenuResult;
-import ru.kkey.ui.preview.DisposeAction;
+import ru.kkey.ui.preview.CloseAction;
 import ru.kkey.ui.preview.Preview;
 
 /**
@@ -78,6 +80,9 @@ public class FilesView
     private final JMenuBar menuBar;
     private final JTable table;
     private final JLabel stateMessage;
+    private final JDialog dialog;
+    //process only in dispatch thread -> no volatile
+    private JPanel contentDialogPanel;
 
     public FilesView()
     {
@@ -85,7 +90,7 @@ public class FilesView
         menuBar = createMenu();
         table = createTable();
         stateMessage = createStateField();
-
+        dialog = createDialog();
         //vertical presentation
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -177,26 +182,23 @@ public class FilesView
 
     public void showDialog(Preview preview, byte[] file)
     {
-        final JDialog dialog = new JDialog(mainFrame, true);
-
         try
         {
+            contentDialogPanel = new JPanel();
+            contentDialogPanel.setLayout(new BorderLayout());
+            dialog.add(contentDialogPanel);
             dialog.setSize(new Dimension(800, 600));
             dialog.setLocationRelativeTo(null);
-
-            //destroy because it is too hard clean form
-            //inner state of the dialog can be vastly changed
-            dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-
-            DisposeAction.bindToEsc(dialog);
-            preview.render(dialog, file);
+            preview.render(contentDialogPanel, file);
+            dialog.revalidate();
+            dialog.setVisible(true);
         }
         catch (RuntimeException e)
         {
             dialog.dispose();
             throw e;
         }
-        dialog.setVisible(true);
+
     }
 
     private void bindEndKey()
@@ -232,6 +234,31 @@ public class FilesView
                 setFocusToRow(0);
             }
         });
+    }
+
+    private JDialog createDialog()
+    {
+        JDialog dialog = new JDialog(mainFrame, true);
+        dialog.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
+
+        dialog.addWindowListener(new WindowAdapter()
+        {
+            @Override
+            public void windowClosing(WindowEvent e)
+            {
+                if (null != contentDialogPanel)
+                {
+                    FilesView.this.dialog.remove(contentDialogPanel);
+                    contentDialogPanel = null;
+                    FilesView.this.dialog.revalidate();
+                    FilesView.this.dialog.repaint();
+                }
+            }
+        });
+        dialog.setSize(new Dimension(800, 600));
+        CloseAction.bindToEsc(dialog);
+
+        return dialog;
     }
 
     private JFrame createMainFrame()
