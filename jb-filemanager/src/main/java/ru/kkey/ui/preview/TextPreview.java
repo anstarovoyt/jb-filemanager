@@ -1,13 +1,10 @@
 package ru.kkey.ui.preview;
 
+import javax.swing.*;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 
 /**
  * Text file preview

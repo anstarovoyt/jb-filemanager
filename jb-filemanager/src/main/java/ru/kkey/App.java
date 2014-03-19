@@ -20,7 +20,7 @@ public class App
 			if (isMac())
 			{
 				System.setProperty("apple.laf.useScreenMenuBar", "true");
-				System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Test");
+				System.setProperty("com.apple.mrj.application.apple.menu.about.name", "anstarovoyt");
 				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			}
 			SwingUtilities.invokeLater(new SwingApp());

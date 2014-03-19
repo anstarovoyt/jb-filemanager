@@ -1,8 +1,7 @@
 package ru.kkey.ui.preview;
 
+import javax.swing.*;
 import java.util.Set;
-
-import javax.swing.JPanel;
 
 /**
  * Common interface for all preview types
